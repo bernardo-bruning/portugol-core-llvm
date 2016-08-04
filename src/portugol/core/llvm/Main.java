@@ -9,7 +9,7 @@ package portugol.core.llvm;
  *
  * @author Bernardo
  */
-public class PortugolCoreLlvm {
+public class Main {
 
     /**
      * @param args the command line arguments
