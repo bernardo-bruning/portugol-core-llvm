@@ -5,6 +5,9 @@
  */
 package portugol.core.llvm;
 
+import br.univali.portugol.nucleo.Portugol;
+import br.univali.portugol.nucleo.Programa;
+
 /**
  *
  * @author Bernardo
@@ -15,7 +18,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        
     }
     
 }
