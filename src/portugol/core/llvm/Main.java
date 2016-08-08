@@ -7,6 +7,7 @@ package portugol.core.llvm;
 
 import br.univali.portugol.nucleo.Portugol;
 import br.univali.portugol.nucleo.Programa;
+import org.llvm.Module;
 
 /**
  *
