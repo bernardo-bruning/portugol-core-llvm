@@ -5,3 +5,6 @@ dist/
 nbdist/
 nbactions.xml
 .nb-gradle/
+*.bc
+*.ll
+programa
