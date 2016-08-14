@@ -11,6 +11,7 @@ import br.univali.portugol.nucleo.Programa;
 import br.univali.portugol.nucleo.asa.ArvoreSintaticaAbstrataPrograma;
 import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
 import br.univali.portugol.nucleo.asa.NoBitwiseNao;
+import br.univali.portugol.nucleo.asa.NoBloco;
 import br.univali.portugol.nucleo.asa.NoCadeia;
 import br.univali.portugol.nucleo.asa.NoCaracter;
 import br.univali.portugol.nucleo.asa.NoCaso;
@@ -24,6 +25,7 @@ import br.univali.portugol.nucleo.asa.NoDeclaracaoVariavel;
 import br.univali.portugol.nucleo.asa.NoDeclaracaoVetor;
 import br.univali.portugol.nucleo.asa.NoEnquanto;
 import br.univali.portugol.nucleo.asa.NoEscolha;
+import br.univali.portugol.nucleo.asa.NoExpressao;
 import br.univali.portugol.nucleo.asa.NoFacaEnquanto;
 import br.univali.portugol.nucleo.asa.NoInclusaoBiblioteca;
 import br.univali.portugol.nucleo.asa.NoInteiro;
@@ -60,11 +62,14 @@ import br.univali.portugol.nucleo.asa.NoRetorne;
 import br.univali.portugol.nucleo.asa.NoSe;
 import br.univali.portugol.nucleo.asa.NoTitulo;
 import br.univali.portugol.nucleo.asa.NoVaPara;
+import br.univali.portugol.nucleo.asa.NoValor;
 import br.univali.portugol.nucleo.asa.NoVetor;
 import br.univali.portugol.nucleo.asa.TipoDado;
 import br.univali.portugol.nucleo.asa.VisitanteASA;
-import br.univali.portugol.nucleo.execucao.Depurador;
 import java.util.List;
+import org.bridj.Pointer;
+import org.llvm.BasicBlock;
+import org.llvm.Builder;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import org.llvm.Value;
@@ -78,10 +83,15 @@ public class Compilador implements VisitanteASA {
 
     private final Programa programa;
     private final Module module;
+    private BasicBlock _currentBlock;
+    private Builder _currentBuilder;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.programa = Portugol.compilar(source);
         this.module = Module.createWithName("programa");
+        Value escreve = this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), TypeRef.int8Type().pointerType()));
+        escreve.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
+        
         programa.getArvoreSintaticaAbstrata().aceitar(this);
     }
 
@@ -117,6 +127,16 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoChamadaFuncao ncf) throws ExcecaoVisitaASA {
+        List<NoExpressao> parametros = ncf.getParametros();
+        for (NoExpressao param : parametros) {
+            if((param instanceof NoCadeia)) {
+                NoCadeia cadeia = (NoCadeia)param;
+                
+                Value llvmCadeia = _currentBuilder.buildGlobalStringPtr(cadeia.getValor(), ".str");
+                _currentBuilder.buildCall(module.getNamedFunction(ncf.getNome()), "", llvmCadeia);
+            }
+        }
+        
         return null;
     }
 
@@ -130,6 +150,15 @@ public class Compilador implements VisitanteASA {
         String fName = ndf.getNome().equals("inicio")?"main":ndf.getNome();
         Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type(), TypeRef.int32Type()));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
+        BasicBlock entry = function.appendBasicBlock("entry");
+        _currentBlock = entry;
+        Builder builder = Builder.createBuilder();
+        _currentBuilder = builder;
+        builder.positionBuilderAtEnd(entry);
+        for (NoBloco bloco : ndf.getBlocos()) {
+            bloco.aceitar(this);
+        }
+        builder.buildRet(TypeRef.int32Type().constInt(1, true));
         return null;
     }
 
