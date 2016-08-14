@@ -1,6 +1,7 @@
 ; ModuleID = 'programa'
-declare i32 @escreva(i8*)
 define i32 @main(i32) {
 entry:
+  %numero = add i32 1, 0
+  call i32 @escreva(i32 %1)
   ret i32 1
 }
