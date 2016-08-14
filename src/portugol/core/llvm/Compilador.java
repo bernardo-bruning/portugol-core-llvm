@@ -83,7 +83,6 @@ public class Compilador implements VisitanteASA {
 
     private final Programa programa;
     private final Module module;
-    private BasicBlock _currentBlock;
     private Builder _currentBuilder;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
@@ -151,7 +150,6 @@ public class Compilador implements VisitanteASA {
         Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type(), TypeRef.int32Type()));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         BasicBlock entry = function.appendBasicBlock("entry");
-        _currentBlock = entry;
         Builder builder = Builder.createBuilder();
         _currentBuilder = builder;
         builder.positionBuilderAtEnd(entry);
