@@ -1,8 +1,8 @@
 programa 
-{ 
+{
 	funcao inicio () 
 	{ 
 		inteiro numero = 1+1
-		escreva(numero)
+		escreva("%d", numero)
 	} 
 }

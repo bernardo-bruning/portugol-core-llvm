@@ -9,12 +9,10 @@ import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import org.llvm.Module;
-import org.llvm.Value;
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -38,29 +36,20 @@ public class CompiladorTeste {
     }
 
     @Test
-    public void programaSemNadaNoInicio() throws ErroCompilacao, ExcecaoVisitaASA, FileNotFoundException {
-       Map<String, String> fontes = getTestes(portugolExtension);
-       Map<String, String> expecteds = getTestes(llvmExtension);
-       
-        for (Map.Entry<String, String> entry : fontes.entrySet()) {
-            String nome = entry.getKey();
-            String fonte = entry.getValue();
-            
-            String expected = expecteds.get(nome);
-            
-            Compilador compilador;
-            compilador = new Compilador(fonte);
-            Module module = compilador.getLLVM();
-            Value func = module.getFirstFunction();
-
-            module.dumpModule();
-            module.writeBitcodeToFile(fileTest);
-
-//            assertEquals(func.getValueName(), "main");
-            assertFile(expected);
-        }
+    public void simplesTeste() throws Exception {
+        testarArquivo("simple");
     }
-
+    
+    @Test
+    public void cadeiaTeste() throws Exception {
+        testarArquivo("string");
+    }
+    
+    @Test
+    public void declararExpressaoAdicaoTest() throws Exception {
+        testarArquivo("declarar-expressao-adicao-simples");
+    }
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
@@ -94,6 +83,23 @@ public class CompiladorTeste {
         }
         
         return files;
+    }
+    
+    private void testarArquivo(String fileName) throws FileNotFoundException, ErroCompilacao, ExcecaoVisitaASA {
+        String codigoEntrada = obterCodigoArquivo("test/" + fileName + portugolExtension);
+        String codigoSaida = obterCodigoArquivo("test/" + fileName + llvmExtension);
+        Compilador compilador = new Compilador(codigoEntrada);
+        Module module = compilador.getLLVM();
+        module.dumpModule();
+        module.writeBitcodeToFile(fileTest);
+        assertFile(codigoSaida);
+    }
+    
+    private String obterCodigoArquivo(String fileName) throws FileNotFoundException {
+        File file = new File(fileName);
+        Scanner scanner = new Scanner(file);
+        String codigo = scanner.useDelimiter("\\A").next();
+        return codigo;
     }
     
     private void assertFile(String expected) {

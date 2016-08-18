@@ -62,18 +62,21 @@ import br.univali.portugol.nucleo.asa.NoRetorne;
 import br.univali.portugol.nucleo.asa.NoSe;
 import br.univali.portugol.nucleo.asa.NoTitulo;
 import br.univali.portugol.nucleo.asa.NoVaPara;
-import br.univali.portugol.nucleo.asa.NoValor;
 import br.univali.portugol.nucleo.asa.NoVetor;
 import br.univali.portugol.nucleo.asa.TipoDado;
 import br.univali.portugol.nucleo.asa.VisitanteASA;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import org.bridj.Pointer;
+import java.util.Map;
+import javax.lang.model.type.TypeKind;
 import org.llvm.BasicBlock;
 import org.llvm.Builder;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import org.llvm.Value;
 import org.llvm.binding.LLVMLibrary;
+import static org.llvm.binding.LLVMLibrary.LLVMInt32Type;
 
 /**
  *
@@ -84,12 +87,13 @@ public class Compilador implements VisitanteASA {
     private final Programa programa;
     private final Module module;
     private Builder _currentBuilder;
+    private Map<String, Value> scope;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.programa = Portugol.compilar(source);
         this.module = Module.createWithName("programa");
-        Value escreve = this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), TypeRef.int8Type().pointerType()));
-        escreve.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
+        this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+        
         
         programa.getArvoreSintaticaAbstrata().aceitar(this);
     }
@@ -111,7 +115,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoCadeia nc) throws ExcecaoVisitaASA {
-        return null;
+        return _currentBuilder.buildGlobalStringPtr(nc.getValor(), "");
     }
 
     @Override
@@ -126,17 +130,15 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoChamadaFuncao ncf) throws ExcecaoVisitaASA {
+        List<Value> args = new ArrayList<>();
         List<NoExpressao> parametros = ncf.getParametros();
         for (NoExpressao param : parametros) {
-            if((param instanceof NoCadeia)) {
-                NoCadeia cadeia = (NoCadeia)param;
-                
-                Value llvmCadeia = _currentBuilder.buildGlobalStringPtr(cadeia.getValor(), ".str");
-                _currentBuilder.buildCall(module.getNamedFunction(ncf.getNome()), "", llvmCadeia);
-            }
+            args.add((Value)param.aceitar(this));
         }
         
-        return null;
+        Value[] arr = new Value[args.size()];
+        
+        return _currentBuilder.buildCall(module.getNamedFunction(ncf.getNome()), "", args.toArray(arr));
     }
 
     @Override
@@ -146,6 +148,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
+        scope = new HashMap<String, Value>();
         String fName = ndf.getNome().equals("inicio")?"main":ndf.getNome();
         Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type(), TypeRef.int32Type()));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
@@ -167,6 +170,26 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
+        switch(ndv.getTipoDado())
+        {
+            case CARACTER:
+                //TODO: Implementar
+                break;
+            case INTEIRO:
+                Value value = (Value)ndv.getInicializacao().aceitar(this);
+                this.scope.put(ndv.getNome(), value);
+                break;
+            case LOGICO:
+                //TODO: Implementar
+                break;
+            case CADEIA:
+                //TODO: Implementar
+                break;
+            case REAL:
+                //TODO: Implementar
+                break;                           
+        }
+        
         return null;
     }
 
@@ -192,7 +215,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoInteiro ni) throws ExcecaoVisitaASA {
-        return null;
+        return TypeRef.int32Type().constInt(ni.getValor(), false);
     }
 
     @Override
@@ -227,7 +250,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoAtribuicao noa) throws ExcecaoVisitaASA {
-        return null;
+        return noa.getOperandoDireito().aceitar(this);
     }
 
     @Override
@@ -262,22 +285,30 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoSoma nos) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildAdd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoSubtracao nos) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildSub(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoDivisao nod) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nod.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nod.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildFDiv(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoMultiplicacao nom) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nom.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nom.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildMul(valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -337,7 +368,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        return null;
+        return this.scope.get(nrv.getNome());
     }
 
     @Override
