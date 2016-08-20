@@ -56,8 +56,13 @@ public class CompiladorTeste {
     }
     
     @Test
-    public void declararInteiro() throws Exception {
+    public void declararInteiroTest() throws Exception {
         testarArquivo("declarar-inteiro");
+    }
+    
+    @Test
+    public void operacaoLogicaTest() throws Exception {
+        testarArquivo("operacao-logica");
     }
     
     @BeforeClass

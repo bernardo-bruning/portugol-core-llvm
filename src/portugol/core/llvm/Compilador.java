@@ -220,7 +220,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoLogico nl) throws ExcecaoVisitaASA {
-        return null;
+        return TypeRef.int1Type();
     }
 
     @Override
@@ -240,12 +240,16 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoLogicaIgualdade noli) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)noli.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)noli.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaDiferenca nold) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nold.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nold.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntNE, valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -255,32 +259,44 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoLogicaE nole) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nole.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nole.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildAnd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaOU nolou) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nolou.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nolou.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildOr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMaior nolm) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGT , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMaiorIgual nolmi) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGE , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenor nolm) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULT  , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenorIgual nolmi) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULE  , valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -318,32 +334,43 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoBitwiseLeftShift nobls) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nobls.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nobls.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildShl(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseRightShift nobrs) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nobrs.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nobrs.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildLShr(valueDireito, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseE nobe) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nobe.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nobe.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildAnd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseOu nobo) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nobo.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nobo.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildOr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseXOR nobxor) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nobxor.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nobxor.getOperandoDireito().aceitar(this);
+        return _currentBuilder.buildXor(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoBitwiseNao nbn) throws ExcecaoVisitaASA {
-        return null;
+        Value expressao = (Value)nbn.getExpressao().aceitar(this);
+        return _currentBuilder.buildNot(expressao, "");
     }
 
     @Override
