@@ -55,6 +55,11 @@ public class CompiladorTeste {
         testarArquivo("declaracao-expressao-complexa");
     }
     
+    @Test
+    public void declararInteiro() throws Exception {
+        testarArquivo("declarar-inteiro");
+    }
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
