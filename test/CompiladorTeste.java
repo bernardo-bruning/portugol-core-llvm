@@ -50,6 +50,11 @@ public class CompiladorTeste {
         testarArquivo("declarar-expressao-adicao-simples");
     }
     
+    @Test
+    public void declararExpressaoComplexaTest() throws Exception {
+        testarArquivo("declaracao-expressao-complexa");
+    }
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }

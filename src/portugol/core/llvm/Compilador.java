@@ -301,7 +301,7 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoDivisao nod) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nod.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nod.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildFDiv(valueEsquerdo, valueDireito, "");
+        return _currentBuilder.buildSDiv(valueEsquerdo, valueDireito, "");
     }
 
     @Override
