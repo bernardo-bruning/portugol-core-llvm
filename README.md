@@ -2,6 +2,9 @@
 
 Portugol core LLVM é um compilador destinado a trnsformar programas escritos em portugol para bitecode LLVM
 
+-----------------
+##Métricas de qualidade do código fonte [![Codacy Badge](https://api.codacy.com/project/badge/Grade/1c7124bc1e644899b41fd8e4c8d503e6)](https://www.codacy.com/app/bernardo-bruning/portugol-core-llvm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=bernardo-bruning/portugol-core-llvm&amp;utm_campaign=Badge_Grade)
+-----------------
 
 ##Como rodar os testes
 
