@@ -55,6 +55,7 @@ import br.univali.portugol.nucleo.asa.NoOperacaoSubtracao;
 import br.univali.portugol.nucleo.asa.NoPara;
 import br.univali.portugol.nucleo.asa.NoPare;
 import br.univali.portugol.nucleo.asa.NoReal;
+import br.univali.portugol.nucleo.asa.NoReferencia;
 import br.univali.portugol.nucleo.asa.NoReferenciaMatriz;
 import br.univali.portugol.nucleo.asa.NoReferenciaVariavel;
 import br.univali.portugol.nucleo.asa.NoReferenciaVetor;
@@ -88,6 +89,7 @@ public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder _currentBuilder;
     private Map<String, Value> scope;
+    private BasicBlock blocoAtual;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.programa = Portugol.compilar(source);
@@ -152,10 +154,10 @@ public class Compilador implements VisitanteASA {
         String fName = ndf.getNome().equals("inicio")?"main":ndf.getNome();
         Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type(), TypeRef.int32Type()));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
-        BasicBlock entry = function.appendBasicBlock("entry");
+        this.blocoAtual = function.appendBasicBlock("entry");
         Builder builder = Builder.createBuilder();
         _currentBuilder = builder;
-        builder.positionBuilderAtEnd(entry);
+        builder.positionBuilderAtEnd(this.blocoAtual);
         for (NoBloco bloco : ndf.getBlocos()) {
             bloco.aceitar(this);
         }
@@ -170,9 +172,11 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
-        Value value = (Value)ndv.getInicializacao().aceitar(this);
-        this.scope.put(ndv.getNome(), value);        
-        return null;
+        Value inicializacao = (Value)ndv.getInicializacao().aceitar(this);
+        Value ponteiro = _currentBuilder.buildAlloca(inicializacao.typeOf().type(), ndv.getNome());
+        _currentBuilder.buildStore(inicializacao, ponteiro);
+        this.scope.put(ndv.getNome(), ponteiro);
+        return ponteiro;
     }
 
     @Override
@@ -182,6 +186,25 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoEnquanto ne) throws ExcecaoVisitaASA {
+        BasicBlock blocoCondicao = this.blocoAtual.insertBasicBlock("enquanto.condicao");
+        BasicBlock blocoEntrada = this.blocoAtual.insertBasicBlock("enquanto.entrada");
+        BasicBlock blocoSaida = this.blocoAtual.insertBasicBlock("enquanto.saida");
+        
+        _currentBuilder.positionBuilderAtEnd(blocoCondicao);
+        Value condicao = (Value)ne.getCondicao().aceitar(this);
+        _currentBuilder.buildCondBr(condicao, blocoEntrada, blocoSaida);
+        
+        _currentBuilder.positionBuilderAtEnd(blocoEntrada);
+        for (NoBloco bloco : ne.getBlocos()) {
+            bloco.aceitar(this);
+        }
+        _currentBuilder.buildBr(blocoCondicao);
+        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
+        
+        blocoAtual.moveBasicBlockBefore(blocoCondicao);
+        blocoCondicao.moveBasicBlockBefore(blocoEntrada);
+        blocoEntrada.moveBasicBlockBefore(blocoSaida);
+        blocoAtual = blocoSaida;
         return null;
     }
 
@@ -212,7 +235,8 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoMenosUnario nmu) throws ExcecaoVisitaASA {
-        return null;
+        Value expressao = (Value)nmu.getExpressao().aceitar(this);
+        return _currentBuilder.buildSub(expressao, TypeRef.int32Type().constInt(1, false), "");
     }
 
     @Override
@@ -236,7 +260,10 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoAtribuicao noa) throws ExcecaoVisitaASA {
-        return noa.getOperandoDireito().aceitar(this);
+        NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
+        Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
+        
+        return _currentBuilder.buildStore(operandoDireito, this.scope.get(operandoEsquerdo.getNome()));
     }
 
     @Override
@@ -325,7 +352,7 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoBitwiseRightShift nobrs) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobrs.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobrs.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildLShr(valueDireito, valueDireito, "");
+        return _currentBuilder.buildLShr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -377,7 +404,8 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        return this.scope.get(nrv.getNome());
+        if(this.scope.containsKey(nrv.getNome())) return _currentBuilder.buildLoad(this.scope.get(nrv.getNome()), nrv.getNome() + ".carregado");
+        return null;
     }
 
     @Override

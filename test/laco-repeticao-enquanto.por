@@ -3,9 +3,9 @@ programa
 	funcao inicio () 
 	{
 		inteiro contador = 10
-		enquanto(contador > 7) {
-			escreva("Teste\n")
-			contador--
+                enquanto(contador > 7) {
+                    escreva("Teste\n")
+                    contador--
 		}
 	} 
 }

@@ -65,6 +65,11 @@ public class CompiladorTeste {
         testarArquivo("operacao-logica");
     }
     
+    @Test
+    public void lacoRepeticaoEnquanto() throws Exception {
+        testarArquivo("laco-repeticao-enquanto");
+    }
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
@@ -127,7 +132,7 @@ public class CompiladorTeste {
             String llvmCode = scanner.useDelimiter("\\A").next();
             scanner.close(); // Put this call in a finally block
 
-            assertEquals(expected.replace("\n", "").replace("\r", ""), llvmCode.replace("\n", "").replace("\r", ""));
+            assertEquals(expected.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""), llvmCode.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""));
         } catch (Exception e) {
             e.printStackTrace();
             assertTrue(false);
