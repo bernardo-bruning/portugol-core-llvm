@@ -170,26 +170,8 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
-        switch(ndv.getTipoDado())
-        {
-            case CARACTER:
-                //TODO: Implementar
-                break;
-            case INTEIRO:
-                Value value = (Value)ndv.getInicializacao().aceitar(this);
-                this.scope.put(ndv.getNome(), value);
-                break;
-            case LOGICO:
-                //TODO: Implementar
-                break;
-            case CADEIA:
-                //TODO: Implementar
-                break;
-            case REAL:
-                //TODO: Implementar
-                break;                           
-        }
-        
+        Value value = (Value)ndv.getInicializacao().aceitar(this);
+        this.scope.put(ndv.getNome(), value);        
         return null;
     }
 
@@ -220,7 +202,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoLogico nl) throws ExcecaoVisitaASA {
-        return TypeRef.int1Type();
+        return TypeRef.int1Type().constInt(nl.getValor()?1:0, false);
     }
 
     @Override
