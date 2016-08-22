@@ -8,8 +8,9 @@ define i32 @main(i32) {
 entry:
   %contador = alloca i32
   store i32 10, i32* %contador
+  br label %enquanto.condicao
 
-enquanto.condicao:                                ; preds = %enquanto.entrada
+enquanto.condicao:                                ; preds = %enquanto.entrada, %entry
   %contador.carregado = load i32* %contador
   %1 = icmp sgt i32 %contador.carregado, 7
   br i1 %1, label %enquanto.entrada, label %enquanto.saida

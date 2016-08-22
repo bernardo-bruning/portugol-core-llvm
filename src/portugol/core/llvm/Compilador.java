@@ -186,25 +186,34 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoEnquanto ne) throws ExcecaoVisitaASA {
-        BasicBlock blocoCondicao = this.blocoAtual.insertBasicBlock("enquanto.condicao");
-        BasicBlock blocoEntrada = this.blocoAtual.insertBasicBlock("enquanto.entrada");
-        BasicBlock blocoSaida = this.blocoAtual.insertBasicBlock("enquanto.saida");
+        BasicBlock blocoCondicao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.condicao");
+        BasicBlock blocoEntrada = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.entrada");
+        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.saida");
         
+        _currentBuilder.buildBr(blocoCondicao);
+        
+        _currentBuilder.clearInsertionPosition();
         _currentBuilder.positionBuilderAtEnd(blocoCondicao);
+        blocoAtual = blocoCondicao;
         Value condicao = (Value)ne.getCondicao().aceitar(this);
         _currentBuilder.buildCondBr(condicao, blocoEntrada, blocoSaida);
         
+        _currentBuilder.clearInsertionPosition();
         _currentBuilder.positionBuilderAtEnd(blocoEntrada);
+        blocoAtual = blocoEntrada;
         for (NoBloco bloco : ne.getBlocos()) {
             bloco.aceitar(this);
         }
         _currentBuilder.buildBr(blocoCondicao);
-        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
         
-        blocoAtual.moveBasicBlockBefore(blocoCondicao);
-        blocoCondicao.moveBasicBlockBefore(blocoEntrada);
-        blocoEntrada.moveBasicBlockBefore(blocoSaida);
+        _currentBuilder.clearInsertionPosition();
+        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
         blocoAtual = blocoSaida;
+        
+        
+//        blocoAtual.moveBasicBlockBefore(blocoCondicao);
+//        blocoCondicao.moveBasicBlockBefore(blocoEntrada);
+//        blocoEntrada.moveBasicBlockBefore(blocoSaida);
         return null;
     }
 
