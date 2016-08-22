@@ -84,18 +84,15 @@ import static org.llvm.binding.LLVMLibrary.LLVMInt32Type;
  * @author Bernardo
  */
 public class Compilador implements VisitanteASA {
-
-    private final Programa programa;
     private final Module module;
     private Builder _currentBuilder;
     private Map<String, Value> scope;
     private BasicBlock blocoAtual;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
-        this.programa = Portugol.compilar(source);
+        Programa programa = Portugol.compilar(source);
         this.module = Module.createWithName("programa");
         this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
-        
         
         programa.getArvoreSintaticaAbstrata().aceitar(this);
     }
@@ -459,9 +456,5 @@ public class Compilador implements VisitanteASA {
 
     public Module getLLVM() {
         return this.module;
-    }
-
-    private TypeRef conversorTipo(TipoDado tipoDado) {
-        return null;
     }
 }

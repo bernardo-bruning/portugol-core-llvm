@@ -31,9 +31,6 @@ public class CompiladorTeste {
     public static String biteCodeExtension = ".bc";
     public static String portugolExtension = ".por";
     public static String llvmExtension = ".ll";
-    
-    public CompiladorTeste() {
-    }
 
     @Test
     public void simplesTeste() throws Exception {
@@ -84,25 +81,6 @@ public class CompiladorTeste {
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
-    }
-
-    private Map<String, String> getTestes(String extensions) throws FileNotFoundException {
-        File folder = new File("test");
-        File[] listOfFiles = folder.listFiles();
-        Map<String, String> files = new HashMap<>();
-        
-        for (int i = 0; i < listOfFiles.length; i++) {
-            if (listOfFiles[i].isFile() & listOfFiles[i].getName().contains(extensions)) {
-                Scanner scanner = new Scanner(listOfFiles[i]);
-                String fonte = scanner.useDelimiter("\\A").next();
-                files.put(listOfFiles[i].getName().replaceFirst(extensions, ""), fonte);
-                scanner.close();                
-            } else if (listOfFiles[i].isDirectory()) {
-                System.out.println("Directory " + listOfFiles[i].getName());
-            }
-        }
-        
-        return files;
     }
     
     private void testarArquivo(String fileName) throws FileNotFoundException, ErroCompilacao, ExcecaoVisitaASA {
