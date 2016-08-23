@@ -8,12 +8,7 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import org.llvm.Module;
 import static org.testng.Assert.*;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import portugol.core.llvm.Compilador;
 import static org.junit.Assert.assertEquals;
 
 /**
