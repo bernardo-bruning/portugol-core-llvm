@@ -65,6 +65,11 @@ public class CompiladorTeste {
         testarArquivo("laco-repeticao-enquanto");
     }
     
+    @Test
+    public void lacoRepeticaoFacaEnquanto() throws Exception {
+        testarArquivo("laco-repeticao-faca-enquanto");
+    }
+    
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
