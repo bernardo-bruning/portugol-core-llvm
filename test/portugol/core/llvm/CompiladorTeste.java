@@ -66,6 +66,11 @@ public class CompiladorTeste {
         testarArquivo("laco-repeticao-para");
     }
     
+    @Test
+    public void se() throws Exception {
+        testarArquivo("se");
+    }
+    
     private void testarArquivo(String fileName) throws FileNotFoundException, ErroCompilacao, ExcecaoVisitaASA {
         String codigoEntrada = obterCodigoArquivo("test/" + fileName + portugolExtension);
         String codigoSaida = obterCodigoArquivo("test/" + fileName + llvmExtension);

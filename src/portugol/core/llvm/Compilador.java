@@ -468,6 +468,37 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoSe nose) throws ExcecaoVisitaASA {
+        BasicBlock blocoSe = this.blocoAtual.getBasicBlockParent().appendBasicBlock("se");
+        BasicBlock blocoSeNao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("senao");
+        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("saida");
+        
+        
+        Value condicao = (Value)nose.getCondicao().aceitar(this);
+        _currentBuilder.buildCondBr(condicao, blocoSe, blocoSeNao);
+        
+        _currentBuilder.buildBr(blocoSe);
+        
+        _currentBuilder.clearInsertionPosition();
+        _currentBuilder.positionBuilderAtEnd(blocoSe);
+        blocoAtual = blocoSe;
+        for (NoBloco bloco : nose.getBlocosVerdadeiros()) {
+            bloco.aceitar(this);
+        }
+        
+        _currentBuilder.buildBr(blocoSaida);
+        
+        _currentBuilder.clearInsertionPosition();
+        _currentBuilder.positionBuilderAtEnd(blocoSeNao);
+        blocoAtual = blocoSeNao;
+        for (NoBloco bloco : nose.getBlocosFalsos()) {
+            bloco.aceitar(this);
+        }
+        
+        _currentBuilder.buildBr(blocoSaida);
+        
+        _currentBuilder.clearInsertionPosition();
+        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
+        blocoAtual = blocoSaida;
         return null;
     }
 
