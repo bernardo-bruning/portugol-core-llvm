@@ -6,6 +6,7 @@
 package portugol.core.llvm.bibliotecas;
 
 import org.llvm.Module;
+import org.llvm.TypeRef;
 import portugol.core.llvm.Biblioteca;
 
 /**
@@ -16,8 +17,8 @@ public class BibliotecaEntedaSaida implements Biblioteca {
 
     @Override
     public void inicializar(Module modulo) {
-        //TODO: Implementar
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+        //TODO: Implementar saída
     }
     
 }
