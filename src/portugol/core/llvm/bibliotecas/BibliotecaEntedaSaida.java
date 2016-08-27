@@ -17,7 +17,7 @@ public class BibliotecaEntedaSaida implements Biblioteca {
 
     @Override
     public void inicializar(Module modulo) {
-        this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+        module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
         //TODO: Implementar saída
     }
     
