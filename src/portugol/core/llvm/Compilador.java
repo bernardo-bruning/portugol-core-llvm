@@ -528,6 +528,8 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoInclusaoBiblioteca nib) throws ExcecaoVisitaASA {
+        Biblioteca biblioteca = gerenciadorBibliotecas.getBiblioteca(nib.getNome());
+        biblioteca.inicializar(module, nib.getAlias());
         return null;
     }
 
