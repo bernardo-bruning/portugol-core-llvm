@@ -71,6 +71,11 @@ public class CompiladorTeste {
         testarArquivo("se");
     }
     
+    @Test
+    public void inclusaoBiblioteca() throws Exception {
+        testarArquivo("inclusao-biblioteca");
+    }
+    
     private void testarArquivo(String fileName) throws FileNotFoundException, ErroCompilacao, ExcecaoVisitaASA {
         String codigoEntrada = obterCodigoArquivo("test/" + fileName + portugolExtension);
         String codigoSaida = obterCodigoArquivo("test/" + fileName + llvmExtension);
