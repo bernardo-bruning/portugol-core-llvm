@@ -88,7 +88,10 @@ public class Compilador implements VisitanteASA {
     private GerenciadorBibliotecas gerenciadorBibliotecas;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
+        this.gerenciadorBibliotecas = Construtor.construtorGerenciadorBibliotecas();
+        
         Programa programa = Portugol.compilar(source);
+        
         this.module = Module.createWithName("programa");
         this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
         
