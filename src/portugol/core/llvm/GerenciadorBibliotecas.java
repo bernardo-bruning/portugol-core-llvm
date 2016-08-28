@@ -12,10 +12,10 @@ import java.util.Map;
  *
  * @author Bernardo
  */
-public class GerenciadoBibliotecas {
+public class GerenciadorBibliotecas {
     Map<String, Biblioteca> bibliotecas;
 
-    public GerenciadoBibliotecas() {
+    public GerenciadorBibliotecas() {
         bibliotecas = new HashMap<>();
     }
     
