@@ -85,6 +85,7 @@ public class Compilador implements VisitanteASA {
     private Builder _currentBuilder;
     private Map<String, Value> scope;
     private BasicBlock blocoAtual;
+    private GerenciadorBibliotecas gerenciadorBibliotecas;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         Programa programa = Portugol.compilar(source);

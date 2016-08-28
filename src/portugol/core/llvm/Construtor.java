@@ -13,7 +13,7 @@ import portugol.core.llvm.bibliotecas.BibliotecaGraficos;
  * @author Bernardo
  */
 public class Construtor {
-    public GerenciadorBibliotecas construtorGerenciadorBibliotecas() {
+    public static GerenciadorBibliotecas construtorGerenciadorBibliotecas() {
         GerenciadorBibliotecas gerenciador = new GerenciadorBibliotecas();
         gerenciador.registrarBiblioteca("ES", new BibliotecaEntedaSaida());
         gerenciador.registrarBiblioteca("Graficos", new BibliotecaGraficos());
