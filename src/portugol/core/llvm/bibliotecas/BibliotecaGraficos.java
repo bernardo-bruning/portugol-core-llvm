@@ -12,7 +12,7 @@ import portugol.core.llvm.Biblioteca;
  *
  * @author Bernardo
  */
-public class BibliotecaGrafica implements Biblioteca {
+public class BibliotecaGraficos implements Biblioteca {
     private static final String concat = ".";
     
     @Override
