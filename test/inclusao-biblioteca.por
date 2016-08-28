@@ -1,9 +1,8 @@
 programa 
 {
-        inclua biblioteca ES --> es
+        inclua biblioteca Graficos --> g
 	funcao inicio () 
 	{ 
 		inteiro numero = 1+1
-		es.escreva("%d", numero)
 	} 
 }

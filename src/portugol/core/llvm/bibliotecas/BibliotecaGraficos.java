@@ -18,7 +18,6 @@ public class BibliotecaGraficos implements Biblioteca {
     @Override
     public void inicializar(Module modulo, String alias) {
         //TODO: Implementar
-        throw new UnsupportedOperationException("Not supported yet."); 
     }
     
 }
