@@ -14,10 +14,11 @@ import portugol.core.llvm.Biblioteca;
  * @author Bernardo
  */
 public class BibliotecaEntedaSaida implements Biblioteca {
-
+    private static final String concat = ".";
+    
     @Override
-    public void inicializar(Module modulo) {
-        modulo.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+    public void inicializar(Module modulo, String alias) {
+        modulo.addFunction(alias+concat+"escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
         //TODO: Implementar saída
     }
     

@@ -13,9 +13,10 @@ import portugol.core.llvm.Biblioteca;
  * @author Bernardo
  */
 public class BibliotecaGrafica implements Biblioteca {
-
+    private static final String concat = ".";
+    
     @Override
-    public void inicializar(Module modulo) {
+    public void inicializar(Module modulo, String alias) {
         //TODO: Implementar
         throw new UnsupportedOperationException("Not supported yet."); 
     }

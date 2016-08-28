@@ -12,5 +12,5 @@ import org.llvm.Module;
  * @author Bernardo
  */
 public interface Biblioteca {
-    void inicializar(Module modulo);
+    void inicializar(Module modulo, String alias);
 }
