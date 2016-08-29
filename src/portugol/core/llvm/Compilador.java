@@ -138,7 +138,14 @@ public class Compilador implements VisitanteASA {
         
         Value[] arr = new Value[args.size()];
         
-        return _currentBuilder.buildCall(module.getNamedFunction(ncf.getNome()), "", args.toArray(arr));
+        try {
+            //TODO: Implementar para tratar quando é um ponteiro
+            Value function = module.getNamedFunction(ncf.getNome());
+            return _currentBuilder.buildCall(function, "", args.toArray(arr));
+        } catch (Exception e) {
+            //TODO:Implementar método de exceção
+            return null;
+        }
     }
 
     @Override
