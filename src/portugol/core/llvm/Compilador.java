@@ -84,11 +84,13 @@ public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder _currentBuilder;
     private Map<String, Value> scope;
+    private Map<String, String> namespaces;
     private BasicBlock blocoAtual;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.gerenciadorBibliotecas = Construtor.construtorGerenciadorBibliotecas();
+        this.namespaces = new HashMap<String, String>();
         
         Programa programa = Portugol.compilar(source);
         
