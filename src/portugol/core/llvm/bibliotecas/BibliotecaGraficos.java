@@ -14,12 +14,18 @@ import portugol.core.llvm.Biblioteca;
  * @author Bernardo
  */
 public class BibliotecaGraficos implements Biblioteca {
-    private static final String concat = ".";
+        
+    @Override
+    public String getNomePacote() {
+        return this.getClass().getPackage().getName() + "." + getClass().getName() + ".";
+    }
+
     
     @Override
-    public void inicializar(Module modulo, String alias) {
+    public void inicializar(Module modulo) {
+        String pacote = getNomePacote();
         //TODO: Implementar
-        modulo.addFunction("criar_cor", TypeRef
+        modulo.addFunction(pacote+"criar_cor", TypeRef
                 .functionType(
                         TypeRef.int32Type(), false, /*retorno*/
                         TypeRef.int32Type(), /*vermelho*/
@@ -27,13 +33,13 @@ public class BibliotecaGraficos implements Biblioteca {
                         TypeRef.int32Type()  /*azul*/
                 ));
         
-        modulo.addFunction("definir_cor", TypeRef
+        modulo.addFunction(pacote+"definir_cor", TypeRef
                 .functionType(
                         TypeRef.int32Type(), false,/*retorno nulo*/
                         TypeRef.int32Type() /*cor*/
                 ));
         
-        modulo.addFunction(alias + concat + "desenhar_ponto", TypeRef
+        modulo.addFunction(pacote+"desenhar_ponto", TypeRef
                 .functionType(
                         TypeRef.int32Type(), false,/*retorno nulo*/
                         TypeRef.int32Type(), /*x*/

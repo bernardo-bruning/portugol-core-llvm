@@ -142,7 +142,8 @@ public class Compilador implements VisitanteASA {
         
         try {
             //TODO: Implementar para tratar quando é um ponteiro
-            Value function = module.getNamedFunction(ncf.getNome());
+            String pacote = pacotes.containsKey(ncf.getEscopo())?pacotes.get(ncf.getEscopo()):"";
+            Value function = module.getNamedFunction(pacote + ncf.getNome());
             return _currentBuilder.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
             //TODO:Implementar método de exceção
@@ -538,7 +539,8 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoInclusaoBiblioteca nib) throws ExcecaoVisitaASA {
         Biblioteca biblioteca = gerenciadorBibliotecas.getBiblioteca(nib.getNome());
-        biblioteca.inicializar(module, nib.getAlias());
+        pacotes.put(nib.getAlias(), biblioteca.getNomePacote());
+        biblioteca.inicializar(module);
         return null;
     }
 
