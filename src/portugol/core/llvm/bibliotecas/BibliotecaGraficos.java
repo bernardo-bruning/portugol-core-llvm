@@ -17,7 +17,7 @@ public class BibliotecaGraficos implements Biblioteca {
         
     @Override
     public String getNomePacote() {
-        return this.getClass().getPackage().getName() + "." + getClass().getName() + ".";
+        return (this.getClass().getPackage().getName() + "." + getClass().getName() + ".").replace(".", "_");
     }
 
     

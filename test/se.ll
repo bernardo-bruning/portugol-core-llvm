@@ -1,3 +1,5 @@
+; ModuleID = 'programa'
+
 @0 = private unnamed_addr constant [12 x i8] c"Acessou se!\00"
 @1 = private unnamed_addr constant [15 x i8] c"Acessou senao!\00"
 
