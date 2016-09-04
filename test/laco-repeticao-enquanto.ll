@@ -23,5 +23,5 @@ enquanto.entrada:                                 ; preds = %enquanto.condicao
   br label %enquanto.condicao
 
 enquanto.saida:                                   ; preds = %enquanto.condicao
-  ret i32 1
+  ret i32 0
 }

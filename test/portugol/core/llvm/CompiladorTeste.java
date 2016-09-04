@@ -101,7 +101,7 @@ public class CompiladorTeste {
             TimeUnit.SECONDS.sleep(1);
             Scanner scanner = new Scanner(new File(fileTest.concat(llvmExtension)));
             String llvmCode = scanner.useDelimiter("\\A").next();
-            scanner.close(); // Put this call in a finally block
+            scanner.close();
 
             assertEquals(expected.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""), llvmCode.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""));
         } catch (Exception e) {

@@ -134,8 +134,10 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoChamadaFuncao ncf) throws ExcecaoVisitaASA {
         List<Value> args = new ArrayList<>();
         List<NoExpressao> parametros = ncf.getParametros();
-        for (NoExpressao param : parametros) {
-            args.add((Value)param.aceitar(this));
+        if(parametros != null) {
+            for (NoExpressao param : parametros) {
+                args.add((Value)param.aceitar(this));
+            }
         }
         
         Value[] arr = new Value[args.size()];
@@ -144,9 +146,11 @@ public class Compilador implements VisitanteASA {
             //TODO: Implementar para tratar quando é um ponteiro
             String pacote = pacotes.containsKey(ncf.getEscopo())?pacotes.get(ncf.getEscopo()):"";
             Value function = module.getNamedFunction(pacote + ncf.getNome());
+            
             return _currentBuilder.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
             //TODO:Implementar método de exceção
+            e.printStackTrace();
             return null;
         }
     }
@@ -169,7 +173,7 @@ public class Compilador implements VisitanteASA {
         for (NoBloco bloco : ndf.getBlocos()) {
             bloco.aceitar(this);
         }
-        builder.buildRet(TypeRef.int32Type().constInt(1, true));
+        builder.buildRet(TypeRef.int32Type().constInt(0, true));
         return null;
     }
 

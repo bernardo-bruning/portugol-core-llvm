@@ -10,5 +10,5 @@ entry:
   store i1 false, i1* %teste
   %teste.carregado = load i1* %teste
   %1 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0), i1 %teste.carregado)
-  ret i32 1
+  ret i32 0
 }

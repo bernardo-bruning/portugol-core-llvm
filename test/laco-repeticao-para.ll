@@ -23,5 +23,5 @@ para.entrada:                                     ; preds = %para.condicao, %ent
   br label %para.condicao
 
 para.saida:                                       ; preds = %para.condicao
-  ret i32 1
+  ret i32 0
 }

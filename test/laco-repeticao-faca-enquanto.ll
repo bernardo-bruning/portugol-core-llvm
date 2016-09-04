@@ -17,5 +17,5 @@ enquanto.entrada:                                 ; preds = %enquanto.condicao, 
   %3 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([7 x i8]* @0, i32 0, i32 0))
   br label %enquanto.condicao
 enquanto.saida:                                   ; preds = %enquanto.condicao
-  ret i32 1
+  ret i32 0
 }

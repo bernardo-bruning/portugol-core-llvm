@@ -25,6 +25,12 @@ public class BibliotecaGraficos implements Biblioteca {
     public void inicializar(Module modulo) {
         String pacote = getNomePacote();
         //TODO: Implementar
+        modulo.addFunction(pacote+"carregar_imagem", TypeRef
+                .functionType(
+                        TypeRef.int32Type(), false, /*retorno*/
+                        TypeRef.int8Type().pointerType() /*caminho*/
+                ));
+        
         modulo.addFunction(pacote+"criar_cor", TypeRef
                 .functionType(
                         TypeRef.int32Type(), false, /*retorno*/
@@ -35,15 +41,52 @@ public class BibliotecaGraficos implements Biblioteca {
         
         modulo.addFunction(pacote+"definir_cor", TypeRef
                 .functionType(
-                        TypeRef.int32Type(), false,/*retorno nulo*/
+                        TypeRef.voidType(), false,/*retorno nulo*/
                         TypeRef.int32Type() /*cor*/
                 ));
         
         modulo.addFunction(pacote+"desenhar_ponto", TypeRef
                 .functionType(
-                        TypeRef.int32Type(), false,/*retorno nulo*/
+                        TypeRef.voidType(), false,/*retorno nulo*/
                         TypeRef.int32Type(), /*x*/
                         TypeRef.int32Type()  /*y*/
+                ));
+        
+        modulo.addFunction(pacote+"desenhar_imagem", TypeRef
+                .functionType(
+                        TypeRef.voidType(), false,/*retorno nulo*/
+                        TypeRef.int32Type(), /*x*/
+                        TypeRef.int32Type(),  /*y*/
+                        TypeRef.int32Type()  /*endereço*/
+                ));
+        
+        modulo.addFunction(pacote+"renderizar_imagem", TypeRef
+                .functionType(
+                        TypeRef.voidType(), false,/*retorno nulo*/
+                        TypeRef.int32Type(), /*largura*/
+                        TypeRef.int32Type()  /*altura*/
+                ));
+        
+        modulo.addFunction(pacote+"renderizar", TypeRef
+                .functionType(
+                        TypeRef.int32Type(), false/*retorno nulo*/
+                ));
+        
+        modulo.addFunction(pacote+"liberar_imagem", TypeRef
+                .functionType(
+                        TypeRef.int32Type(), false,/*retorno nulo*/
+                        TypeRef.int32Type() /*endereço*/
+                ));
+        
+        modulo.addFunction(pacote+"iniciar_modo_grafico", TypeRef
+                .functionType(
+                        TypeRef.voidType(), false,/*retorno nulo*/
+                        TypeRef.int1Type() /*manter visível*/
+                ));
+        
+        modulo.addFunction(pacote+"encerrar_modo_grafico", TypeRef
+                .functionType(
+                        TypeRef.voidType()
                 ));
     }
     

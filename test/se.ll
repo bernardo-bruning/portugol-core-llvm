@@ -19,5 +19,5 @@ senao:                                            ; preds = %entry
   br label %saida
 
 saida:                                            ; preds = %senao, %se
-  ret i32 1
+  ret i32 0
 }
