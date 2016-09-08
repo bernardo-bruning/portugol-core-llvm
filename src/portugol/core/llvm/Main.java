@@ -22,13 +22,14 @@ public class Main {
      * Compilador source/programa.por -o obj/programa.bc
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try {
             List<File> inputs = getInputs(args);
             List<String> outputs = getOutputs(args);
             compile(inputs, outputs);
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            throw new Exception();
         }
     }
 
@@ -71,10 +72,15 @@ public class Main {
             try {
                 Scanner scanner = new Scanner(input);
                 String codigo = scanner.useDelimiter("\\A").next();
-                Compilador compilador = new Compilador(codigo);
-                compilador.getLLVM().writeBitcodeToFile(output);                
+                try {
+                    Compilador compilador = new Compilador(codigo);
+                    compilador.getLLVM().writeBitcodeToFile(output);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw e;
+                }
             } catch (Exception e) {
-                throw new Exception("Erro ao abrir o arquivo!");
+                throw new Exception("Erro ao abrir o arquivo! \n" + e.getMessage());
             }
         }
     }

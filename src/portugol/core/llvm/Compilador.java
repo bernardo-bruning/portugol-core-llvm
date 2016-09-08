@@ -163,8 +163,8 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
         scope = new HashMap<String, Value>();
-        String fName = ndf.getNome().equals("inicio")?"main":ndf.getNome();
-        Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type(), TypeRef.int32Type()));
+        String fName = ndf.getNome();
+        Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type()));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         this.blocoAtual = function.appendBasicBlock("entry");
         Builder builder = Builder.createBuilder();

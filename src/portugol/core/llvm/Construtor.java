@@ -7,6 +7,7 @@ package portugol.core.llvm;
 
 import portugol.core.llvm.bibliotecas.BibliotecaEntedaSaida;
 import portugol.core.llvm.bibliotecas.BibliotecaGraficos;
+import portugol.core.llvm.bibliotecas.BibliotecaUtil;
 
 /**
  *
@@ -17,6 +18,7 @@ public class Construtor {
         GerenciadorBibliotecas gerenciador = new GerenciadorBibliotecas();
         gerenciador.registrarBiblioteca("ES", new BibliotecaEntedaSaida());
         gerenciador.registrarBiblioteca("Graficos", new BibliotecaGraficos());
+        gerenciador.registrarBiblioteca("Util", new BibliotecaUtil());
         return gerenciador;
     }
 }

@@ -25,6 +25,11 @@ public class BibliotecaGraficos implements Biblioteca {
     public void inicializar(Module modulo) {
         String pacote = getNomePacote();
         //TODO: Implementar
+        modulo.addFunction(pacote+"limpar", TypeRef
+                .functionType(
+                        TypeRef.voidType(), false /*retorno*/
+                ));
+        
         modulo.addFunction(pacote+"carregar_imagem", TypeRef
                 .functionType(
                         TypeRef.int32Type(), false, /*retorno*/
