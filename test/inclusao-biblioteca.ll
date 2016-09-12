@@ -24,7 +24,7 @@ declare void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_Bibl
 
 declare void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_encerrar_modo_grafico()
 
-define i32 @inicio() {
+define void @inicio() {
 entry:
   call void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_iniciar_modo_grafico(i1 false)
   %0 = call i32 @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_criar_cor(i32 20, i32 20, i32 20)
@@ -34,5 +34,5 @@ entry:
   call void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_definir_cor(i32 %cor.carregado)
   call void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_desenhar_ponto(i32 10, i32 10)
   call void @portugol_core_llvm_bibliotecas_portugol_core_llvm_bibliotecas_BibliotecaGraficos_encerrar_modo_grafico()
-  ret i32 0
+  
 }

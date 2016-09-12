@@ -64,6 +64,7 @@ import br.univali.portugol.nucleo.asa.NoSe;
 import br.univali.portugol.nucleo.asa.NoTitulo;
 import br.univali.portugol.nucleo.asa.NoVaPara;
 import br.univali.portugol.nucleo.asa.NoVetor;
+import br.univali.portugol.nucleo.asa.TipoDado;
 import br.univali.portugol.nucleo.asa.VisitanteASA;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -164,7 +165,7 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
         scope = new HashMap<String, Value>();
         String fName = ndf.getNome();
-        Value function = this.module.addFunction(fName, TypeRef.functionType(TypeRef.int32Type()));
+        Value function = this.module.addFunction(fName, TypeRef.functionType(convertType(ndf.getTipoDado())));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         this.blocoAtual = function.appendBasicBlock("entry");
         Builder builder = Builder.createBuilder();
@@ -173,7 +174,9 @@ public class Compilador implements VisitanteASA {
         for (NoBloco bloco : ndf.getBlocos()) {
             bloco.aceitar(this);
         }
-        builder.buildRet(TypeRef.int32Type().constInt(0, true));
+        
+        //TODO: Implementar retorno de funções
+        //builder.buildRet(TypeRef.int32Type().constInt(0, true));
         return null;
     }
 
@@ -550,5 +553,14 @@ public class Compilador implements VisitanteASA {
 
     public Module getLLVM() {
         return this.module;
+    }
+
+    private TypeRef convertType(TipoDado tipoDado) {
+        switch(tipoDado){
+            case INTEIRO:
+                return TypeRef.int32Type();
+            default:
+                return TypeRef.voidType();
+        }
     }
 }

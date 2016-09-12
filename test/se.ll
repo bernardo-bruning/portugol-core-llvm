@@ -5,7 +5,7 @@
 
 declare i32 @escreva(i8*, ...)
 
-define i32 @inicio() {
+define void @inicio() {
 entry:
   br i1 false, label %se, label %senao
   br label %se
@@ -19,5 +19,5 @@ senao:                                            ; preds = %entry
   br label %saida
 
 saida:                                            ; preds = %senao, %se
-  ret i32 0
+  
 }

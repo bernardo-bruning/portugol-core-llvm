@@ -4,11 +4,11 @@
 
 declare i32 @escreva(i8*, ...)
 
-define i32 @inicio() {
+define void @inicio() {
 entry:
   %teste = alloca i1
   store i1 false, i1* %teste
   %teste.carregado = load i1* %teste
   %0 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0), i1 %teste.carregado)
-  ret i32 0
+  
 }

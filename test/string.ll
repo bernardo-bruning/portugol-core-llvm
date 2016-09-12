@@ -4,8 +4,8 @@
 
 declare i32 @escreva(i8*, ...)
 
-define i32 @inicio() {
+define void @inicio() {
 entry:
   %0 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([12 x i8]* @0, i32 0, i32 0))
-  ret i32 0
+  
 }

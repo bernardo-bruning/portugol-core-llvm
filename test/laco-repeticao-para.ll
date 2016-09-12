@@ -4,7 +4,7 @@
 
 declare i32 @escreva(i8*, ...)
 
-define i32 @inicio() {
+define void @inicio() {
 entry:
   %contador = alloca i32
   store i32 1, i32* %contador
@@ -23,5 +23,5 @@ para.entrada:                                     ; preds = %para.condicao, %ent
   br label %para.condicao
 
 para.saida:                                       ; preds = %para.condicao
-  ret i32 0
+  
 }
