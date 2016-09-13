@@ -175,8 +175,6 @@ public class Compilador implements VisitanteASA {
             bloco.aceitar(this);
         }
         
-        //TODO: Implementar retorno de funções
-        //builder.buildRet(TypeRef.int32Type().constInt(0, true));
         return null;
     }
 
@@ -484,7 +482,9 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoRetorne nr) throws ExcecaoVisitaASA {
-        return null;
+        Value value = (Value)nr.getExpressao().aceitar(this);
+        _currentBuilder.buildRet(value);
+        return value;
     }
 
     @Override
@@ -559,6 +559,14 @@ public class Compilador implements VisitanteASA {
         switch(tipoDado){
             case INTEIRO:
                 return TypeRef.int32Type();
+            case CADEIA:
+                return TypeRef.int8Type().pointerType();
+            case LOGICO:
+                return TypeRef.int1Type();
+            case REAL:
+                return TypeRef.floatType();
+            case VAZIO:
+                return TypeRef.voidType();
             default:
                 return TypeRef.voidType();
         }

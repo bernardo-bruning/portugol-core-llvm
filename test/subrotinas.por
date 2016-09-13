@@ -1,11 +1,11 @@
 programa 
 {
+	funcao cadeia mensagem() {
+		retorne "teste"
+	}
+	
 	funcao inicio() 
-	{		
-		para (contador = 1; contador <= 10; contador++) 
-		{
-                    escreva ("Teste\n")
-		}
+	{
+		escreva(mensagem())	
 	}
 }
-
