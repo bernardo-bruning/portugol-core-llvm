@@ -24,11 +24,23 @@ public class BibliotecaUtil implements Biblioteca {
     @Override
     public void inicializar(Module modulo) {
         String pacote = getNomePacote();
-        //TODO: Implementar
+        
         modulo.addFunction(pacote+"aguarde", TypeRef
                 .functionType(
                         TypeRef.voidType(), false, /*retorno*/
                         TypeRef.int32Type()
+                ));
+        
+        modulo.addFunction(pacote+"sorteia", TypeRef
+                .functionType(
+                        TypeRef.int32Type(), false, /*retorno*/
+                        TypeRef.int32Type(), //Inicio
+                        TypeRef.int32Type()  //Fim
+                ));
+        
+        modulo.addFunction(pacote+"tempo_decorrido", TypeRef
+                .functionType(
+                        TypeRef.int32Type(), false /*retorno*/
                 ));
     }
     
