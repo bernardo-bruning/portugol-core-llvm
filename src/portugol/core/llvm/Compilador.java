@@ -70,12 +70,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.bridj.Pointer;
 import org.llvm.BasicBlock;
 import org.llvm.Builder;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import org.llvm.Value;
 import org.llvm.binding.LLVMLibrary;
+import org.llvm.binding.LLVMLibrary.LLVMValueRef;
 
 /**
  *
@@ -84,7 +86,7 @@ import org.llvm.binding.LLVMLibrary;
 public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder _currentBuilder;
-    private Map<String, Value> scope;
+    private Map<String, Value> scope; //Renomear para escopo
     private Map<String, String> pacotes;
     private BasicBlock blocoAtual;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
@@ -194,7 +196,8 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoVetor ndv) throws ExcecaoVisitaASA {
-        return null;
+        TypeRef tipo = convertType(ndv.getTipoDado());
+        return _currentBuilder.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
     }
 
     @Override
@@ -477,6 +480,9 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVetor nrv) throws ExcecaoVisitaASA {
+        Value value = scope.get(nrv.getNome());
+        Value indice = (Value)nrv.aceitar(this);
+        //TODO: Implementar GEP
         return null;
     }
 
