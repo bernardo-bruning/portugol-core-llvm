@@ -70,14 +70,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.bridj.Pointer;
 import org.llvm.BasicBlock;
 import org.llvm.Builder;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import org.llvm.Value;
 import org.llvm.binding.LLVMLibrary;
-import org.llvm.binding.LLVMLibrary.LLVMValueRef;
 
 /**
  *
@@ -86,7 +84,7 @@ import org.llvm.binding.LLVMLibrary.LLVMValueRef;
 public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder _currentBuilder;
-    private Map<String, Value> scope; //Renomear para escopo
+    private Map<String, Value> escopo; //Renomear para escopo
     private Map<String, String> pacotes;
     private BasicBlock blocoAtual;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
@@ -146,7 +144,6 @@ public class Compilador implements VisitanteASA {
         Value[] arr = new Value[args.size()];
         
         try {
-            //TODO: Implementar para tratar quando é um ponteiro
             String pacote = pacotes.containsKey(ncf.getEscopo())?pacotes.get(ncf.getEscopo()):"";
             Value function = module.getNamedFunction(pacote + ncf.getNome());
             
@@ -165,7 +162,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
-        scope = new HashMap<String, Value>();
+        escopo = new HashMap<>();
         String fName = ndf.getNome();
         Value function = this.module.addFunction(fName, TypeRef.functionType(convertType(ndf.getTipoDado())));
         function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
@@ -190,7 +187,7 @@ public class Compilador implements VisitanteASA {
         Value inicializacao = (Value)ndv.getInicializacao().aceitar(this);
         Value ponteiro = _currentBuilder.buildAlloca(inicializacao.typeOf().type(), ndv.getNome());
         _currentBuilder.buildStore(inicializacao, ponteiro);
-        this.scope.put(ndv.getNome(), ponteiro);
+        this.escopo.put(ndv.getNome(), ponteiro);
         return ponteiro;
     }
 
@@ -307,7 +304,7 @@ public class Compilador implements VisitanteASA {
         NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
         Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
         
-        return _currentBuilder.buildStore(operandoDireito, this.scope.get(operandoEsquerdo.getNome()));
+        return _currentBuilder.buildStore(operandoDireito, this.escopo.get(operandoEsquerdo.getNome()));
     }
 
     @Override
@@ -474,13 +471,13 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        if(this.scope.containsKey(nrv.getNome())) return _currentBuilder.buildLoad(this.scope.get(nrv.getNome()), nrv.getNome() + ".carregado");
+        if(this.escopo.containsKey(nrv.getNome())) return _currentBuilder.buildLoad(this.escopo.get(nrv.getNome()), nrv.getNome() + ".carregado");
         return null;
     }
 
     @Override
     public Object visitar(NoReferenciaVetor nrv) throws ExcecaoVisitaASA {
-        Value value = scope.get(nrv.getNome());
+        Value value = escopo.get(nrv.getNome());
         Value indice = (Value)nrv.aceitar(this);
         _currentBuilder.buildGEP(value, indice, 1, "");
         return null;

@@ -28,8 +28,8 @@ public class Main {
             List<String> outputs = getOutputs(args);
             compile(inputs, outputs);
         } catch (Exception e) {
+            //TODO: Melhorar implementação
             System.out.println(e.getMessage());
-            throw new Exception();
         }
     }
 

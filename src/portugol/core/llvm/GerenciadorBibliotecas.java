@@ -13,7 +13,7 @@ import java.util.Map;
  * @author Bernardo
  */
 public class GerenciadorBibliotecas {
-    Map<String, Biblioteca> bibliotecas;
+    private Map<String, Biblioteca> bibliotecas;
 
     public GerenciadorBibliotecas() {
         bibliotecas = new HashMap<>();
