@@ -482,7 +482,7 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoReferenciaVetor nrv) throws ExcecaoVisitaASA {
         Value value = scope.get(nrv.getNome());
         Value indice = (Value)nrv.aceitar(this);
-        //TODO: Implementar GEP
+        _currentBuilder.buildGEP(value, indice, 1, "");
         return null;
     }
 
