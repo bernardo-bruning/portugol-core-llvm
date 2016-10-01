@@ -83,11 +83,12 @@ import org.llvm.binding.LLVMLibrary;
  */
 public class Compilador implements VisitanteASA {
     private final Module module;
-    private Builder _currentBuilder;
+    private Builder construtor;
     private Map<String, Value> escopo; //Renomear para escopo
     private Map<String, String> pacotes;
-    private BasicBlock blocoAtual;
+    private BasicBlock blocoEscopo;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
+    private ArvoreSintaticaAbstrataPrograma arvoreSintaticaAbstrata;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.gerenciadorBibliotecas = Construtor.construtorGerenciadorBibliotecas();
@@ -103,6 +104,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(ArvoreSintaticaAbstrataPrograma asap) throws ExcecaoVisitaASA {
+        arvoreSintaticaAbstrata = asap;
         for (NoInclusaoBiblioteca inclusao : asap.getListaInclusoesBibliotecas())
         {
             inclusao.aceitar(this);
@@ -118,7 +120,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoCadeia nc) throws ExcecaoVisitaASA {
-        return _currentBuilder.buildGlobalStringPtr(nc.getValor(), "");
+        return construtor.buildGlobalStringPtr(nc.getValor(), "");
     }
 
     @Override
@@ -147,7 +149,7 @@ public class Compilador implements VisitanteASA {
             String pacote = pacotes.containsKey(ncf.getEscopo())?pacotes.get(ncf.getEscopo()):"";
             Value function = module.getNamedFunction(pacote + ncf.getNome());
             
-            return _currentBuilder.buildCall(function, "", args.toArray(arr));
+            return construtor.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
             //TODO:Implementar método de exceção
             e.printStackTrace();
@@ -163,18 +165,18 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
         escopo = new HashMap<>();
-        String fName = ndf.getNome();
-        Value function = this.module.addFunction(fName, TypeRef.functionType(convertType(ndf.getTipoDado())));
-        function.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
-        this.blocoAtual = function.appendBasicBlock("entry");
-        Builder builder = Builder.createBuilder();
-        _currentBuilder = builder;
-        builder.positionBuilderAtEnd(this.blocoAtual);
+        String nomeFuncao = ndf.getNome();
+        Value funcao = this.module.addFunction(nomeFuncao, TypeRef.functionType(convertType(ndf.getTipoDado())));
+        funcao.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
+        blocoEscopo = funcao.appendBasicBlock("incio_funcao");
+        construtor = Builder.createBuilder();
+        construtor.positionBuilderAtEnd(this.blocoEscopo);
+        
         for (NoBloco bloco : ndf.getBlocos()) {
             bloco.aceitar(this);
         }
         
-        return null;
+        return funcao;
     }
 
     @Override
@@ -185,43 +187,43 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
         Value inicializacao = (Value)ndv.getInicializacao().aceitar(this);
-        Value ponteiro = _currentBuilder.buildAlloca(inicializacao.typeOf().type(), ndv.getNome());
-        _currentBuilder.buildStore(inicializacao, ponteiro);
-        this.escopo.put(ndv.getNome(), ponteiro);
-        return ponteiro;
+        //Value ponteiro = construtor.buildAlloca(inicializacao.typeOf().type(), ndv.getNome());
+        //construtor.buildStore(inicializacao, ponteiro);
+        this.escopo.put(ndv.getNome(), inicializacao);
+        return inicializacao;
     }
 
     @Override
     public Object visitar(NoDeclaracaoVetor ndv) throws ExcecaoVisitaASA {
         TypeRef tipo = convertType(ndv.getTipoDado());
-        return _currentBuilder.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
+        return construtor.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
     }
 
     @Override
     public Object visitar(NoEnquanto ne) throws ExcecaoVisitaASA {
-        BasicBlock blocoCondicao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.condicao");
-        BasicBlock blocoEntrada = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.entrada");
-        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.saida");
+        BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.condicao");
+        BasicBlock blocoEntrada = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.entrada");
+        BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.saida");
         
-        _currentBuilder.buildBr(blocoCondicao);
+        construtor.buildBr(blocoCondicao);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoCondicao);
-        blocoAtual = blocoCondicao;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoCondicao);
+        blocoEscopo = blocoCondicao;
         Value condicao = (Value)ne.getCondicao().aceitar(this);
-        _currentBuilder.buildCondBr(condicao, blocoEntrada, blocoSaida);
+        construtor.buildCondBr(condicao, blocoEntrada, blocoSaida);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoEntrada);
-        blocoAtual = blocoEntrada;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoEntrada);
+        blocoEscopo = blocoEntrada;
         for (NoBloco bloco : ne.getBlocos()) {
             bloco.aceitar(this);
         }
-        _currentBuilder.buildBr(blocoCondicao);
+        construtor.buildBr(blocoCondicao);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
-        blocoAtual = blocoSaida;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSaida);        
+        blocoEscopo = blocoSaida;
         return null;
     }
 
@@ -232,29 +234,29 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoFacaEnquanto nfe) throws ExcecaoVisitaASA {
-        BasicBlock blocoCondicao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.condicao");
-        BasicBlock blocoEntrada = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.entrada");
-        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("enquanto.saida");
+        BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.condicao");
+        BasicBlock blocoEntrada = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.entrada");
+        BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("enquanto.saida");
         
-        _currentBuilder.buildBr(blocoEntrada);
+        construtor.buildBr(blocoEntrada);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoCondicao);
-        blocoAtual = blocoCondicao;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoCondicao);
+        blocoEscopo = blocoCondicao;
         Value condicao = (Value)nfe.getCondicao().aceitar(this);
-        _currentBuilder.buildCondBr(condicao, blocoEntrada, blocoSaida);
+        construtor.buildCondBr(condicao, blocoEntrada, blocoSaida);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoEntrada);
-        blocoAtual = blocoEntrada;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoEntrada);
+        blocoEscopo = blocoEntrada;
         for (NoBloco bloco : nfe.getBlocos()) {
             bloco.aceitar(this);
         }
-        _currentBuilder.buildBr(blocoCondicao);
+        construtor.buildBr(blocoCondicao);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
-        blocoAtual = blocoSaida;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSaida);        
+        blocoEscopo = blocoSaida;
         
         return null;
     }
@@ -277,7 +279,7 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoMenosUnario nmu) throws ExcecaoVisitaASA {
         Value expressao = (Value)nmu.getExpressao().aceitar(this);
-        return _currentBuilder.buildSub(expressao, TypeRef.int32Type().constInt(1, false), "");
+        return construtor.buildSub(expressao, TypeRef.int32Type().constInt(1, false), "");
     }
 
     @Override
@@ -289,14 +291,14 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoLogicaIgualdade noli) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)noli.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)noli.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaDiferenca nold) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nold.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nold.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntNE, valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntNE, valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -304,77 +306,77 @@ public class Compilador implements VisitanteASA {
         NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
         Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
         
-        return _currentBuilder.buildStore(operandoDireito, this.escopo.get(operandoEsquerdo.getNome()));
+        return construtor.buildStore(operandoDireito, this.escopo.get(operandoEsquerdo.getNome()));
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaE nole) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nole.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nole.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildAnd(valueEsquerdo, valueDireito, "");
+        return construtor.buildAnd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaOU nolou) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolou.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolou.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildOr(valueEsquerdo, valueDireito, "");
+        return construtor.buildOr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMaior nolm) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGT , valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGT , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMaiorIgual nolmi) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGE , valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGE , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenor nolm) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULT  , valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULT  , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenorIgual nolmi) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULE  , valueEsquerdo, valueDireito, "");
+        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULE  , valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoSoma nos) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildAdd(valueEsquerdo, valueDireito, "");
+        return construtor.buildAdd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoSubtracao nos) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildSub(valueEsquerdo, valueDireito, "");
+        return construtor.buildSub(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoDivisao nod) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nod.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nod.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildSDiv(valueEsquerdo, valueDireito, "");
+        return construtor.buildSDiv(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoMultiplicacao nom) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nom.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nom.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildMul(valueEsquerdo, valueDireito, "");
+        return construtor.buildMul(valueEsquerdo, valueDireito, "");
     }
 
     @Override
@@ -386,71 +388,71 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoBitwiseLeftShift nobls) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobls.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobls.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildShl(valueEsquerdo, valueDireito, "");
+        return construtor.buildShl(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseRightShift nobrs) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobrs.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobrs.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildLShr(valueEsquerdo, valueDireito, "");
+        return construtor.buildLShr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseE nobe) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobe.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobe.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildAnd(valueEsquerdo, valueDireito, "");
+        return construtor.buildAnd(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseOu nobo) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobo.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobo.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildOr(valueEsquerdo, valueDireito, "");
+        return construtor.buildOr(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseXOR nobxor) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobxor.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobxor.getOperandoDireito().aceitar(this);
-        return _currentBuilder.buildXor(valueEsquerdo, valueDireito, "");
+        return construtor.buildXor(valueEsquerdo, valueDireito, "");
     }
 
     @Override
     public Object visitar(NoBitwiseNao nbn) throws ExcecaoVisitaASA {
         Value expressao = (Value)nbn.getExpressao().aceitar(this);
-        return _currentBuilder.buildNot(expressao, "");
+        return construtor.buildNot(expressao, "");
     }
 
     @Override
     public Object visitar(NoPara nopara) throws ExcecaoVisitaASA {
-        BasicBlock blocoCondicao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("para.condicao");
-        BasicBlock blocoEntrada = this.blocoAtual.getBasicBlockParent().appendBasicBlock("para.entrada");
-        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("para.saida");
+        BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("para.condicao");
+        BasicBlock blocoEntrada = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("para.entrada");
+        BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("para.saida");
         
         nopara.getInicializacao().aceitar(this);
-        _currentBuilder.buildBr(blocoEntrada);
+        construtor.buildBr(blocoEntrada);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoCondicao);
-        blocoAtual = blocoCondicao;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoCondicao);
+        blocoEscopo = blocoCondicao;
         Value condicao = (Value)nopara.getCondicao().aceitar(this);
-        _currentBuilder.buildCondBr(condicao, blocoEntrada, blocoSaida);
+        construtor.buildCondBr(condicao, blocoEntrada, blocoSaida);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoEntrada);
-        blocoAtual = blocoEntrada;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoEntrada);
+        blocoEscopo = blocoEntrada;
         for (NoBloco bloco : nopara.getBlocos()) {
             bloco.aceitar(this);
         }
         
         nopara.getIncremento().aceitar(this);
-        _currentBuilder.buildBr(blocoCondicao);
+        construtor.buildBr(blocoCondicao);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
-        blocoAtual = blocoSaida;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSaida);        
+        blocoEscopo = blocoSaida;
         return null;
     }
 
@@ -471,58 +473,60 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        if(this.escopo.containsKey(nrv.getNome())) return _currentBuilder.buildLoad(this.escopo.get(nrv.getNome()), nrv.getNome() + ".carregado");
-        return null;
+        if(this.escopo.containsKey(nrv.getNome())) 
+            return this.escopo.get(nrv.getNome());
+            //return construtor.buildLoad(, nrv.getNome() + ".carregado");
+        throw new ExcecaoVisitaASA("Variável não declarada.", arvoreSintaticaAbstrata, nrv);
     }
 
     @Override
     public Object visitar(NoReferenciaVetor nrv) throws ExcecaoVisitaASA {
         Value value = escopo.get(nrv.getNome());
         Value indice = (Value)nrv.aceitar(this);
-        _currentBuilder.buildGEP(value, indice, 1, "");
+        construtor.buildGEP(value, indice, 1, "");
         return null;
     }
 
     @Override
     public Object visitar(NoRetorne nr) throws ExcecaoVisitaASA {
         Value value = (Value)nr.getExpressao().aceitar(this);
-        _currentBuilder.buildRet(value);
+        construtor.buildRet(value);
         return value;
     }
 
     @Override
     public Object visitar(NoSe nose) throws ExcecaoVisitaASA {
-        BasicBlock blocoSe = this.blocoAtual.getBasicBlockParent().appendBasicBlock("se");
-        BasicBlock blocoSeNao = this.blocoAtual.getBasicBlockParent().appendBasicBlock("senao");
-        BasicBlock blocoSaida = this.blocoAtual.getBasicBlockParent().appendBasicBlock("saida");
+        BasicBlock blocoSe = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("se");
+        BasicBlock blocoSeNao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("senao");
+        BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("saida");
         
         
         Value condicao = (Value)nose.getCondicao().aceitar(this);
-        _currentBuilder.buildCondBr(condicao, blocoSe, blocoSeNao);
+        construtor.buildCondBr(condicao, blocoSe, blocoSeNao);
         
-        _currentBuilder.buildBr(blocoSe);
+        construtor.buildBr(blocoSe);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSe);
-        blocoAtual = blocoSe;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSe);
+        blocoEscopo = blocoSe;
         for (NoBloco bloco : nose.getBlocosVerdadeiros()) {
             bloco.aceitar(this);
         }
         
-        _currentBuilder.buildBr(blocoSaida);
+        construtor.buildBr(blocoSaida);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSeNao);
-        blocoAtual = blocoSeNao;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSeNao);
+        blocoEscopo = blocoSeNao;
         for (NoBloco bloco : nose.getBlocosFalsos()) {
             bloco.aceitar(this);
         }
         
-        _currentBuilder.buildBr(blocoSaida);
+        construtor.buildBr(blocoSaida);
         
-        _currentBuilder.clearInsertionPosition();
-        _currentBuilder.positionBuilderAtEnd(blocoSaida);        
-        blocoAtual = blocoSaida;
+        construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSaida);        
+        blocoEscopo = blocoSaida;
         return null;
     }
 
