@@ -181,7 +181,13 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoMatriz ndm) throws ExcecaoVisitaASA {
-        return null;
+        TypeRef tipo = convertType(ndm.getTipoDado());
+        Value numeroColunas = (Value)ndm.getNumeroColunas().aceitar(this);
+        Value numeroLinhas = (Value)ndm.getNumeroLinhas().aceitar(this);
+        Value tamanhoTotalMatriz = construtor.buildMul(numeroLinhas, numeroColunas, "");
+        Value matriz = construtor.buildArrayAlloca(tipo.type(), tamanhoTotalMatriz, "");
+        escopo.put(ndm.getNome(), matriz);
+        return matriz;
     }
 
     @Override
@@ -196,7 +202,9 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoDeclaracaoVetor ndv) throws ExcecaoVisitaASA {
         TypeRef tipo = convertType(ndv.getTipoDado());
-        return construtor.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
+        Value vetor = construtor.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
+        escopo.put(ndv.getNome(), vetor);
+        return vetor;
     }
 
     @Override
@@ -468,7 +476,12 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaMatriz nrm) throws ExcecaoVisitaASA {
-        return null;
+        Value value = escopo.get(nrm.getNome());
+        Value linha = (Value)nrm.getLinha().aceitar(this);
+        Value coluna = (Value)nrm.getColuna().aceitar(this);
+        Value acessoLinha = construtor.buildMul(linha, (Value)((NoDeclaracaoMatriz)nrm.getOrigemDaReferencia()).getNumeroColunas().aceitar(this), "");
+        Value indice = construtor.buildAdd(acessoLinha, coluna, "");
+        return construtor.buildGEP(value, indice, 1, "");
     }
 
     @Override
