@@ -7,18 +7,16 @@ package portugol.core.llvm.bibliotecas;
 
 import org.llvm.Module;
 import org.llvm.TypeRef;
-import portugol.core.llvm.Biblioteca;
 
 /**
  *
  * @author Bernardo
  */
-public class BibliotecaEntedaSaida extends AbstractBiblioteca {
-    
+public class BibliotecaMatematica extends AbstractBiblioteca {
+
     @Override
     public void inicializar(Module modulo) {
-        modulo.addFunction(getNomePacote()+"escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
-        //TODO: Implementar saída
+        assinarFuncao(modulo, "arredondar", TypeRef.doubleType(), new TypeRef[] { TypeRef.doubleType(), TypeRef.int32Type() });
     }
     
 }

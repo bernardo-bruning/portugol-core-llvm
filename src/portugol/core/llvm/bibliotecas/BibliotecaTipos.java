@@ -13,12 +13,11 @@ import portugol.core.llvm.Biblioteca;
  *
  * @author Bernardo
  */
-public class BibliotecaEntedaSaida extends AbstractBiblioteca {
+public class BibliotecaTipos extends AbstractBiblioteca {
     
     @Override
     public void inicializar(Module modulo) {
-        modulo.addFunction(getNomePacote()+"escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
-        //TODO: Implementar saída
+        assinarFuncao(modulo, "real_para_inteiro", TypeRef.int32Type(), new TypeRef[]{ TypeRef.doubleType() });
     }
     
 }

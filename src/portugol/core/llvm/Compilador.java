@@ -66,16 +66,19 @@ import br.univali.portugol.nucleo.asa.NoVaPara;
 import br.univali.portugol.nucleo.asa.NoVetor;
 import br.univali.portugol.nucleo.asa.TipoDado;
 import br.univali.portugol.nucleo.asa.VisitanteASA;
+import br.univali.portugol.nucleo.asa.VisitanteASABasico;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.bridj.IntValuedEnum;
 import org.llvm.BasicBlock;
 import org.llvm.Builder;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import org.llvm.Value;
 import org.llvm.binding.LLVMLibrary;
+import portugol.core.llvm.bibliotecas.BibliotecaComEscopo;
 
 /**
  *
@@ -84,7 +87,7 @@ import org.llvm.binding.LLVMLibrary;
 public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder construtor;
-    private Map<String, Value> escopo; //Renomear para escopo
+    private Escopo escopo; //Renomear para escopo
     private Map<String, String> pacotes;
     private BasicBlock blocoEscopo;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
@@ -93,11 +96,15 @@ public class Compilador implements VisitanteASA {
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.gerenciadorBibliotecas = Construtor.construtorGerenciadorBibliotecas();
         this.pacotes = new HashMap<String, String>();
+        this.escopo = new Escopo();
         
         Programa programa = Portugol.compilar(source);
         
         this.module = Module.createWithName("programa");
         this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+        
+        this.construtor = Builder.createBuilder();
+        
         
         programa.getArvoreSintaticaAbstrata().aceitar(this);
     }
@@ -105,12 +112,19 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(ArvoreSintaticaAbstrataPrograma asap) throws ExcecaoVisitaASA {
         arvoreSintaticaAbstrata = asap;
+        AssinarFuncoes assinarFuncoes = new AssinarFuncoes(module, asap);
+        
         for (NoInclusaoBiblioteca inclusao : asap.getListaInclusoesBibliotecas())
         {
             inclusao.aceitar(this);
         }
 
         List<NoDeclaracao> listaDeclaracoesGlobais = asap.getListaDeclaracoesGlobais();
+        for (NoDeclaracao noDeclaracao : listaDeclaracoesGlobais)
+        {
+            noDeclaracao.aceitar(assinarFuncoes);
+        }
+        
         for (NoDeclaracao noDeclaracao : listaDeclaracoesGlobais)
         {
             noDeclaracao.aceitar(this);
@@ -151,9 +165,7 @@ public class Compilador implements VisitanteASA {
             
             return construtor.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
-            //TODO:Implementar método de exceção
-            e.printStackTrace();
-            return null;
+            throw new ExcecaoVisitaASA(String.format("Não foi possível chamar a função %s com os parametros %s", ncf.getNome(), arr), arvoreSintaticaAbstrata, ncf);
         }
     }
 
@@ -164,9 +176,9 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
-        escopo = new HashMap<>();
+        escopo = new Escopo(escopo);
         String nomeFuncao = ndf.getNome();
-        Value funcao = this.module.addFunction(nomeFuncao, TypeRef.functionType(convertType(ndf.getTipoDado())));
+        Value funcao = this.module.getNamedFunction(nomeFuncao);;
         funcao.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         blocoEscopo = funcao.appendBasicBlock("incio_funcao");
         construtor = Builder.createBuilder();
@@ -176,34 +188,33 @@ public class Compilador implements VisitanteASA {
             bloco.aceitar(this);
         }
         
+        escopo = escopo.getParent();
         return funcao;
     }
 
     @Override
     public Object visitar(NoDeclaracaoMatriz ndm) throws ExcecaoVisitaASA {
-        TypeRef tipo = convertType(ndm.getTipoDado());
+        TypeRef tipo = Util.convertType(ndm.getTipoDado());
         Value numeroColunas = (Value)ndm.getNumeroColunas().aceitar(this);
         Value numeroLinhas = (Value)ndm.getNumeroLinhas().aceitar(this);
         Value tamanhoTotalMatriz = construtor.buildMul(numeroLinhas, numeroColunas, "");
         Value matriz = construtor.buildArrayAlloca(tipo.type(), tamanhoTotalMatriz, "");
-        escopo.put(ndm.getNome(), matriz);
+        escopo.adicionar(ndm.getNome(), matriz);
         return matriz;
     }
 
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
         Value inicializacao = (Value)ndv.getInicializacao().aceitar(this);
-        //Value ponteiro = construtor.buildAlloca(inicializacao.typeOf().type(), ndv.getNome());
-        //construtor.buildStore(inicializacao, ponteiro);
-        this.escopo.put(ndv.getNome(), inicializacao);
+        this.escopo.adicionar(ndv.getNome(), inicializacao);
         return inicializacao;
     }
 
     @Override
     public Object visitar(NoDeclaracaoVetor ndv) throws ExcecaoVisitaASA {
-        TypeRef tipo = convertType(ndv.getTipoDado());
+        TypeRef tipo = Util.convertType(ndv.getTipoDado());
         Value vetor = construtor.buildArrayAlloca(tipo.type(), (Value)ndv.getTamanho().aceitar(this), "");
-        escopo.put(ndv.getNome(), vetor);
+        escopo.adicionar(ndv.getNome(), vetor);
         return vetor;
     }
 
@@ -287,26 +298,50 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoMenosUnario nmu) throws ExcecaoVisitaASA {
         Value expressao = (Value)nmu.getExpressao().aceitar(this);
-        return construtor.buildSub(expressao, TypeRef.int32Type().constInt(1, false), "");
+        for (LLVMLibrary.LLVMTypeKind tipo : expressao.typeOf().getTypeKind()) {
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
+                    return construtor.buildFNeg(expressao, "");
+                
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                return construtor.buildNeg(expressao, "");
+
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                return construtor.buildFNeg(expressao, "");
+        }
+        
+        throw new ExcecaoVisitaASA("Erro ao executar menos unário", arvoreSintaticaAbstrata, nmu);
     }
 
     @Override
     public Object visitar(NoNao nonao) throws ExcecaoVisitaASA {
-        return null;
+        Value expressao = (Value)nonao.getExpressao().aceitar(this);
+        
+        for (LLVMLibrary.LLVMTypeKind tipo : expressao.typeOf().getTypeKind()) {
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
+                    return construtor.buildFNeg(expressao, "");
+                
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                return construtor.buildNeg(expressao, "");
+
+            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                return construtor.buildFNeg(expressao, "");
+        }
+        
+        throw new ExcecaoVisitaASA("Erro ao executar nó não", arvoreSintaticaAbstrata, nonao);
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaIgualdade noli) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)noli.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)noli.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, "");
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, noli);
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaDiferenca nold) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nold.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nold.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntNE, valueEsquerdo, valueDireito, "");
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntNE, valueEsquerdo, valueDireito, nold);
     }
 
     @Override
@@ -314,7 +349,8 @@ public class Compilador implements VisitanteASA {
         NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
         Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
         
-        return construtor.buildStore(operandoDireito, this.escopo.get(operandoEsquerdo.getNome()));
+        this.escopo.adicionar(operandoEsquerdo.getNome(), operandoDireito);
+        return operandoDireito;
     }
 
     @Override
@@ -335,48 +371,76 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoLogicaMaior nolm) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGT , valueEsquerdo, valueDireito, "");
+        
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntSGT, valueEsquerdo, valueDireito, nolm);
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMaiorIgual nolmi) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntSGE , valueEsquerdo, valueDireito, "");
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntSGE, valueEsquerdo, valueDireito, nolmi);
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenor nolm) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolm.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolm.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULT  , valueEsquerdo, valueDireito, "");
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntULT, valueEsquerdo, valueDireito, nolm);
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaMenorIgual nolmi) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolmi.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolmi.getOperandoDireito().aceitar(this);
-        return construtor.buildICmp(LLVMLibrary.LLVMIntPredicate.LLVMIntULE  , valueEsquerdo, valueDireito, "");
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntULE, valueEsquerdo, valueDireito, nolmi);
     }
 
     @Override
     public Object visitar(NoOperacaoSoma nos) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
-        return construtor.buildAdd(valueEsquerdo, valueDireito, "");
+        for (LLVMLibrary.LLVMTypeKind tipoDireito : valueDireito.typeOf().getTypeKind()) {
+            for (LLVMLibrary.LLVMTypeKind tipoEsquerdo : valueEsquerdo.typeOf().getTypeKind()) {
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
+                    return construtor.buildFAdd(valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                    return construtor.buildAdd(valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                    return construtor.buildNSWAdd(valueEsquerdo, valueDireito, "");
+            }
+        }
+        throw new ExcecaoVisitaASA("Erro ao efetuar operação de adição", arvoreSintaticaAbstrata, nos);
     }
 
     @Override
     public Object visitar(NoOperacaoSubtracao nos) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nos.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nos.getOperandoDireito().aceitar(this);
-        return construtor.buildSub(valueEsquerdo, valueDireito, "");
+        
+        for (LLVMLibrary.LLVMTypeKind tipoDireito : valueDireito.typeOf().getTypeKind()) {
+            for (LLVMLibrary.LLVMTypeKind tipoEsquerdo : valueEsquerdo.typeOf().getTypeKind()) {
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
+                    return construtor.buildFSub(valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                    return construtor.buildSub(valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                    return construtor.buildNSWSub(valueEsquerdo, valueDireito, "");
+            }
+        }
+        
+        throw new ExcecaoVisitaASA("Erro ao efetuar operação de subtração, tipos inválidos", arvoreSintaticaAbstrata, nos);
     }
 
     @Override
     public Object visitar(NoOperacaoDivisao nod) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nod.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nod.getOperandoDireito().aceitar(this);
+        
         return construtor.buildSDiv(valueEsquerdo, valueDireito, "");
     }
 
@@ -384,7 +448,19 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoMultiplicacao nom) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nom.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nom.getOperandoDireito().aceitar(this);
-        return construtor.buildMul(valueEsquerdo, valueDireito, "");
+        for (LLVMLibrary.LLVMTypeKind tipoDireita : valueDireito.typeOf().getTypeKind()) {
+            for (LLVMLibrary.LLVMTypeKind tipoEsquerda : valueEsquerdo.typeOf().getTypeKind()) {
+                if(tipoDireita == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind && tipoEsquerda == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                    return construtor.buildMul(valueEsquerdo, valueDireito, "");
+                if(tipoDireita == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind && tipoEsquerda == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
+                    return construtor.buildFMul(valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireita == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind && tipoEsquerda == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                    return construtor.buildNSWMul(valueDireito, valueDireito, "");
+            }
+        }
+        
+        throw new ExcecaoVisitaASA("Erro ao efetuar operação de multiplicação", arvoreSintaticaAbstrata, nom);
     }
 
     @Override
@@ -471,12 +547,12 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReal noreal) throws ExcecaoVisitaASA {
-        return null;
+        return TypeRef.doubleType().constReal(noreal.getValor());
     }
 
     @Override
     public Object visitar(NoReferenciaMatriz nrm) throws ExcecaoVisitaASA {
-        Value value = escopo.get(nrm.getNome());
+        Value value = escopo.referenciar(nrm.getNome());
         Value linha = (Value)nrm.getLinha().aceitar(this);
         Value coluna = (Value)nrm.getColuna().aceitar(this);
         Value acessoLinha = construtor.buildMul(linha, (Value)((NoDeclaracaoMatriz)nrm.getOrigemDaReferencia()).getNumeroColunas().aceitar(this), "");
@@ -486,15 +562,18 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        if(this.escopo.containsKey(nrv.getNome())) 
-            return this.escopo.get(nrv.getNome());
-            //return construtor.buildLoad(, nrv.getNome() + ".carregado");
-        throw new ExcecaoVisitaASA("Variável não declarada.", arvoreSintaticaAbstrata, nrv);
+        Object referencia = this.escopo.referenciar(nrv.getNome());
+        if(referencia == null) {
+            String mensagem = String.format("Erro ao referenciar a váriavel %s", nrv.getNome());
+            throw new ExcecaoVisitaASA(mensagem, arvoreSintaticaAbstrata, nrv);
+        }
+        
+        return referencia;
     }
 
     @Override
     public Object visitar(NoReferenciaVetor nrv) throws ExcecaoVisitaASA {
-        Value value = escopo.get(nrv.getNome());
+        Value value = escopo.referenciar(nrv.getNome());
         Value indice = (Value)nrv.aceitar(this);
         construtor.buildGEP(value, indice, 1, "");
         return null;
@@ -531,9 +610,10 @@ public class Compilador implements VisitanteASA {
         construtor.clearInsertionPosition();
         construtor.positionBuilderAtEnd(blocoSeNao);
         blocoEscopo = blocoSeNao;
-        for (NoBloco bloco : nose.getBlocosFalsos()) {
-            bloco.aceitar(this);
-        }
+        if(nose.getBlocosFalsos() != null)
+            for (NoBloco bloco : nose.getBlocosFalsos()) {
+                bloco.aceitar(this);
+            }
         
         construtor.buildBr(blocoSaida);
         
@@ -565,9 +645,14 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoInclusaoBiblioteca nib) throws ExcecaoVisitaASA {
-        Biblioteca biblioteca = gerenciadorBibliotecas.getBiblioteca(nib.getNome());
+        Biblioteca biblioteca;
+        biblioteca = gerenciadorBibliotecas.getBiblioteca(nib.getNome());
+        if(biblioteca == null) 
+            throw new ExcecaoVisitaASA(String.format("Biblioteca %s não suportada!", nib.getNome()), arvoreSintaticaAbstrata, nib);
+        
         pacotes.put(nib.getAlias(), biblioteca.getNomePacote());
         biblioteca.inicializar(module);
+        if(biblioteca instanceof BibliotecaComEscopo) ((BibliotecaComEscopo)biblioteca).inicializarEscopo(escopo);
         return null;
     }
 
@@ -575,7 +660,55 @@ public class Compilador implements VisitanteASA {
         return this.module;
     }
 
-    private TypeRef convertType(TipoDado tipoDado) {
+    private Object operacao(LLVMLibrary.LLVMIntPredicate llvmIntPredicate, Value valueEsquerdo, Value valueDireito, NoBloco noBloco) throws ExcecaoVisitaASA {
+        for (LLVMLibrary.LLVMTypeKind tipoDireito : valueDireito.typeOf().getTypeKind()) {
+            for (LLVMLibrary.LLVMTypeKind tipoEsquerdo : valueEsquerdo.typeOf().getTypeKind()) {
+                if((tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind) || (tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind))
+                    return construtor.buildFCmp(convertPredicate(llvmIntPredicate) , valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
+                    return construtor.buildICmp(llvmIntPredicate , valueEsquerdo, valueDireito, "");
+                
+                if(tipoDireito == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind && tipoEsquerdo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
+                    return construtor.buildFCmp(convertPredicate(llvmIntPredicate) , valueEsquerdo, valueDireito, "");
+            }
+        }
+        
+        throw new ExcecaoVisitaASA("Operação inválida para o tipo de dado", arvoreSintaticaAbstrata, noBloco);
+    }
+
+    private IntValuedEnum<LLVMLibrary.LLVMRealPredicate> convertPredicate(LLVMLibrary.LLVMIntPredicate llvmIntPredicate) throws ExcecaoVisitaASA {
+        switch(llvmIntPredicate) {
+            case LLVMIntEQ:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealOEQ;
+            case LLVMIntSGE:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealOGE;
+            case LLVMIntNE:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealONE;
+            case LLVMIntSGT:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealOGT;
+            case LLVMIntSLE:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealOLE;
+            case LLVMIntSLT:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealOLT;
+            case LLVMIntUGE:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealUGE;
+            case LLVMIntUGT:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealUGT;
+            case LLVMIntULE:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealULE;            
+            case LLVMIntULT:
+                return LLVMLibrary.LLVMRealPredicate.LLVMRealULT;
+        }
+        
+        throw new ExcecaoVisitaASA("Erro ao converter tipos", arvoreSintaticaAbstrata, null);
+    }
+
+}
+
+class Util {
+    
+    public static TypeRef convertType(TipoDado tipoDado) {
         switch(tipoDado){
             case INTEIRO:
                 return TypeRef.int32Type();
@@ -591,4 +724,32 @@ public class Compilador implements VisitanteASA {
                 return TypeRef.voidType();
         }
     }
+}
+
+class AssinarFuncoes extends VisitanteASABasico{
+
+    private final ArvoreSintaticaAbstrataPrograma asa;
+    private final Module modulo;
+
+    public AssinarFuncoes(Module modulo, ArvoreSintaticaAbstrataPrograma asa) {
+        this.asa = asa;
+        this.modulo = modulo;
+    }
+
+    @Override
+    public Object visitar(NoDeclaracaoFuncao declaracaoFuncao) throws ExcecaoVisitaASA {
+        TypeRef tipoRetorno = Util.convertType(declaracaoFuncao.getTipoDado());
+        modulo.addFunction(declaracaoFuncao.getNome(), TypeRef.functionType(tipoRetorno));
+        return null;
+    }
+
+    @Override
+    public Object visitar(NoDeclaracaoVariavel noDeclaracaoVariavel) throws ExcecaoVisitaASA {
+        return null;
+    }
+
+    @Override
+    public Object visitar(NoDeclaracaoParametro noDeclaracaoParametro) throws ExcecaoVisitaASA {
+        return null;
+    }    
 }

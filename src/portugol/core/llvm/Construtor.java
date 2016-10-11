@@ -7,7 +7,10 @@ package portugol.core.llvm;
 
 import portugol.core.llvm.bibliotecas.BibliotecaEntedaSaida;
 import portugol.core.llvm.bibliotecas.BibliotecaGraficos;
+import portugol.core.llvm.bibliotecas.BibliotecaMatematica;
 import portugol.core.llvm.bibliotecas.BibliotecaMouse;
+import portugol.core.llvm.bibliotecas.BibliotecaTeclado;
+import portugol.core.llvm.bibliotecas.BibliotecaTipos;
 import portugol.core.llvm.bibliotecas.BibliotecaUtil;
 
 /**
@@ -21,6 +24,9 @@ public class Construtor {
         gerenciador.registrarBiblioteca("Graficos", new BibliotecaGraficos());
         gerenciador.registrarBiblioteca("Util", new BibliotecaUtil());
         gerenciador.registrarBiblioteca("Mouse", new BibliotecaMouse());
+        gerenciador.registrarBiblioteca("Teclado", new BibliotecaTeclado());
+        gerenciador.registrarBiblioteca("Matematica", new BibliotecaMatematica());
+        gerenciador.registrarBiblioteca("Tipos", new BibliotecaTipos());
         return gerenciador;
     }
 }

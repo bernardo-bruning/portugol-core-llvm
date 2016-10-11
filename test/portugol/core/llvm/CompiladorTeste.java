@@ -2,6 +2,7 @@ package portugol.core.llvm;
 
 import br.univali.portugol.nucleo.ErroCompilacao;
 import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
+import br.univali.portugol.nucleo.asa.NoBloco;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -80,6 +81,26 @@ public class CompiladorTeste {
     public void testeSubrotinas() throws Exception {
         testarArquivo("subrotinas");
     }
+    
+    @Test
+    public void declararVariaveGlobal() throws Exception{
+        testarArquivo("declarar-variavel-global");
+    }
+    
+    @Test
+    public void testeMoonLander() throws Exception {
+        try {
+            testarArquivo("moon-lander");
+        } catch (ExcecaoVisitaASA e) {
+            if(e.getNo() instanceof NoBloco){
+                String mensagem = String.format("Erro linha: %d", ((NoBloco)e.getNo()).getTrechoCodigoFonte().getLinha());
+                throw new Exception(mensagem, e);
+            }
+        } catch(RuntimeException e){
+            System.out.println("Exceçao em tempo de execução ocorreu!");
+        }
+    }
+    
     
     private void testarArquivo(String fileName) throws FileNotFoundException, ErroCompilacao, ExcecaoVisitaASA {
         String codigoEntrada = obterCodigoArquivo("test/" + fileName + portugolExtension);

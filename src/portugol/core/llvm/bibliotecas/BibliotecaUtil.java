@@ -13,14 +13,8 @@ import portugol.core.llvm.Biblioteca;
  *
  * @author Bernardo
  */
-public class BibliotecaUtil implements Biblioteca {
-        
-    @Override
-    public String getNomePacote() {
-        return (this.getClass().getPackage().getName() + "." + getClass().getName() + ".").replace(".", "_");
-    }
+public class BibliotecaUtil extends AbstractBiblioteca{
 
-    
     @Override
     public void inicializar(Module modulo) {
         String pacote = getNomePacote();
@@ -42,6 +36,9 @@ public class BibliotecaUtil implements Biblioteca {
                 .functionType(
                         TypeRef.int32Type(), false /*retorno*/
                 ));
+        
+        assinarFuncao(modulo, "arredondar", TypeRef.int32Type(), 
+                new TypeRef[]{ TypeRef.doubleType(), TypeRef.int32Type() });
     }
     
 }

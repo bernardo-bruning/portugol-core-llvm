@@ -5,6 +5,9 @@
  */
 package portugol.core.llvm;
 
+import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
+import br.univali.portugol.nucleo.asa.NoBloco;
+import br.univali.portugol.nucleo.mensagens.ErroSintatico;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +30,14 @@ public class Main {
             List<File> inputs = getInputs(args);
             List<String> outputs = getOutputs(args);
             compile(inputs, outputs);
-        } catch (Exception e) {
-            //TODO: Melhorar implementação
+        } catch (ExcecaoVisitaASA e) {
             System.out.println(e.getMessage());
+            System.out.println(e.getNo().toString());
+            if(e.getNo() instanceof NoBloco){
+                int linha = ((NoBloco)e.getNo()).getTrechoCodigoFonte().getLinha();
+                System.out.println(String.format("linha %d", linha));
+            }
+            e.printStackTrace();
         }
     }
 
@@ -69,19 +77,16 @@ public class Main {
             File input = inputs.get(i);
             String output = outputs.get(i);
             
+            String codigo;
             try {
                 Scanner scanner = new Scanner(input);
-                String codigo = scanner.useDelimiter("\\A").next();
-                try {
-                    Compilador compilador = new Compilador(codigo);
-                    compilador.getLLVM().writeBitcodeToFile(output);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
-                }
+                codigo = scanner.useDelimiter("\\A").next();
             } catch (Exception e) {
                 throw new Exception("Erro ao abrir o arquivo! \n" + e.getMessage());
             }
+            
+            Compilador compilador = new Compilador(codigo);
+            compilador.getLLVM().writeBitcodeToFile(output);
         }
     }
     

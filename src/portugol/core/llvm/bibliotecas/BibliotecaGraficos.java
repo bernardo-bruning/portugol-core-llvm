@@ -13,22 +13,13 @@ import portugol.core.llvm.Biblioteca;
  *
  * @author Bernardo
  */
-public class BibliotecaGraficos implements Biblioteca {
-        
-    @Override
-    public String getNomePacote() {
-        return (this.getClass().getPackage().getName() + "." + getClass().getName() + ".").replace(".", "_");
-    }
-
-    
+public class BibliotecaGraficos extends AbstractBiblioteca {
+   
     @Override
     public void inicializar(Module modulo) {
         String pacote = getNomePacote();
         //TODO: Implementar
-        modulo.addFunction(pacote+"limpar", TypeRef
-                .functionType(
-                        TypeRef.voidType(), false /*retorno*/
-                ));
+        assinarProcedimento(modulo, "limpar");
         
         modulo.addFunction(pacote+"carregar_imagem", TypeRef
                 .functionType(
@@ -93,6 +84,5 @@ public class BibliotecaGraficos implements Biblioteca {
                 .functionType(
                         TypeRef.voidType()
                 ));
-    }
-    
+    }    
 }
