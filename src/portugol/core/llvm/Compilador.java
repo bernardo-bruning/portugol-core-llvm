@@ -102,6 +102,7 @@ public class Compilador implements VisitanteASA {
         
         this.module = Module.createWithName("programa");
         this.module.addFunction("escreva", TypeRef.functionType(TypeRef.int32Type(), true, TypeRef.int8Type().pointerType()));
+        this.module.addFunction("leia", TypeRef.functionType(TypeRef.voidType(), true, TypeRef.int32Type()));
         
         this.construtor = Builder.createBuilder();
         
@@ -205,7 +206,17 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
-        Value inicializacao = (Value)ndv.getInicializacao().aceitar(this);
+        Value inicializacao;
+        if(ndv.getInicializacao() == null) {
+            TypeRef tipo = Util.convertType(ndv.getTipoDado());
+            inicializacao = tipo.constNull();
+        }
+        else {
+             inicializacao = (Value)ndv.getInicializacao().aceitar(this);
+        }
+        
+        
+        inicializacao.setValueName(ndv.getNome());
         this.escopo.adicionar(ndv.getNome(), inicializacao);
         return inicializacao;
     }
