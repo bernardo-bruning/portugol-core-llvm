@@ -1,12 +1,14 @@
 programa 
 {
-        inclua biblioteca Util --> u
         inteiro numero_global = 5
+        real real_global = 0.18
+
 	funcao inicio () 
 	{
             inteiro numero = 10 + numero_global
-            escreva("%d", numero_global)
             escreva("%d", numero)
+            escreva("%d", numero_global)
+            
             numero_global += 10
             segunda_operacao()
 	}
@@ -14,7 +16,7 @@ programa
         funcao segunda_operacao()
         {
             escreva("%d", numero_global)
-            inteiro numero = u.sorteia(0, 100)
+            inteiro numero = 4
             numero_global += numero
             escreva("%d", numero_global)
         }

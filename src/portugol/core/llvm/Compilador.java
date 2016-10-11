@@ -68,10 +68,12 @@ import br.univali.portugol.nucleo.asa.TipoDado;
 import br.univali.portugol.nucleo.asa.VisitanteASA;
 import br.univali.portugol.nucleo.asa.VisitanteASABasico;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.bridj.IntValuedEnum;
+import org.bridj.Pointer;
 import org.llvm.BasicBlock;
 import org.llvm.Builder;
 import org.llvm.Module;
@@ -88,14 +90,15 @@ public class Compilador implements VisitanteASA {
     private final Module module;
     private Builder construtor;
     private Escopo escopo; //Renomear para escopo
-    private Map<String, String> pacotes;
+    private final Map<String, String> pacotes;
     private BasicBlock blocoEscopo;
     private GerenciadorBibliotecas gerenciadorBibliotecas;
     private ArvoreSintaticaAbstrataPrograma arvoreSintaticaAbstrata;
+    private boolean isGlobal = true;
 
     public Compilador(String source) throws ErroCompilacao, ExcecaoVisitaASA {
         this.gerenciadorBibliotecas = Construtor.construtorGerenciadorBibliotecas();
-        this.pacotes = new HashMap<String, String>();
+        this.pacotes = new HashMap<>();
         this.escopo = new Escopo();
         
         Programa programa = Portugol.compilar(source);
@@ -166,7 +169,7 @@ public class Compilador implements VisitanteASA {
             
             return construtor.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
-            throw new ExcecaoVisitaASA(String.format("Não foi possível chamar a função %s com os parametros %s", ncf.getNome(), arr), arvoreSintaticaAbstrata, ncf);
+            throw new ExcecaoVisitaASA(String.format("Não foi possível chamar a função %s com os parametros %s", ncf.getNome(), Arrays.toString(arr)), arvoreSintaticaAbstrata, ncf);
         }
     }
 
@@ -177,9 +180,10 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
+        isGlobal = false;
         escopo = new Escopo(escopo);
         String nomeFuncao = ndf.getNome();
-        Value funcao = this.module.getNamedFunction(nomeFuncao);;
+        Value funcao = this.module.getNamedFunction(nomeFuncao);
         funcao.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         blocoEscopo = funcao.appendBasicBlock("incio_funcao");
         construtor = Builder.createBuilder();
@@ -190,6 +194,7 @@ public class Compilador implements VisitanteASA {
         }
         
         escopo = escopo.getParent();
+        isGlobal = true;
         return funcao;
     }
 
@@ -207,18 +212,27 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoDeclaracaoVariavel ndv) throws ExcecaoVisitaASA {
         Value inicializacao;
+        TypeRef tipo = Util.convertType(ndv.getTipoDado());
         if(ndv.getInicializacao() == null) {
-            TypeRef tipo = Util.convertType(ndv.getTipoDado());
             inicializacao = tipo.constNull();
         }
         else {
-             inicializacao = (Value)ndv.getInicializacao().aceitar(this);
+            inicializacao = (Value)ndv.getInicializacao().aceitar(this);
         }
         
         
-        inicializacao.setValueName(ndv.getNome());
-        this.escopo.adicionar(ndv.getNome(), inicializacao);
-        return inicializacao;
+        Value ponteiro;
+        if(isGlobal){
+            ponteiro = this.module.addGlobal(tipo, ndv.getNome());
+            ponteiro.setInitializer(inicializacao);
+        }
+        else{
+            ponteiro = tipo.pointerType().constPointerNull();
+            construtor.buildStore(inicializacao, ponteiro);
+        }
+        
+        this.escopo.adicionar(ndv.getNome(), ponteiro);
+        return ponteiro;
     }
 
     @Override
@@ -360,8 +374,9 @@ public class Compilador implements VisitanteASA {
         NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
         Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
         
-        this.escopo.adicionar(operandoEsquerdo.getNome(), operandoDireito);
-        return operandoDireito;
+        Value ponteiro = this.escopo.referenciar(operandoEsquerdo.getNome());
+        construtor.buildStore(operandoDireito, ponteiro);
+        return ponteiro;
     }
 
     @Override
@@ -573,13 +588,13 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoReferenciaVariavel nrv) throws ExcecaoVisitaASA {
-        Object referencia = this.escopo.referenciar(nrv.getNome());
+        Value referencia = this.escopo.referenciar(nrv.getNome());
         if(referencia == null) {
             String mensagem = String.format("Erro ao referenciar a váriavel %s", nrv.getNome());
             throw new ExcecaoVisitaASA(mensagem, arvoreSintaticaAbstrata, nrv);
         }
         
-        return referencia;
+        return construtor.buildLoad(referencia, nrv.getNome());
     }
 
     @Override
@@ -728,7 +743,7 @@ class Util {
             case LOGICO:
                 return TypeRef.int1Type();
             case REAL:
-                return TypeRef.floatType();
+                return TypeRef.doubleType();
             case VAZIO:
                 return TypeRef.voidType();
             default:
