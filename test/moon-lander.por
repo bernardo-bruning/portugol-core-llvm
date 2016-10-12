@@ -1,4 +1,5 @@
 
+
 /* CLIQUE NO SINAL DE "+", À ESQUERDA, PARA EXIBIR A DESCRIÇÃO DO EXEMPLO
  *  
  * Copyright (C) 2014 - UNIVALI - Universidade do Vale do Itajaí
@@ -253,10 +254,6 @@ programa
         	{
         		desenhar_sombra_foguete()	
 			g.desenhar_imagem(x_foguete, y_foguete, imagem_foguete)
-
-			g.definir_tamanho_texto(22.0)
-			g.definir_cor(0xFFFFFF)
-			g.definir_estilo_texto(falso, falso, falso)
 		}
 		senao se (quebrou)
 		{
@@ -302,9 +299,9 @@ programa
 		inteiro y_sombra = tp.real_para_inteiro(ALTURA_TELA - 57 + m.valor_absoluto(400.0-x_centro_foguete)/7)
 		
 		g.definir_cor(g.COR_PRETO)
-		g.definir_opacidade(128)
+		//g.definir_opacidade(128)
 		g.desenhar_elipse(x_sombra, y_sombra, largura_sombra, altura_sombra, verdadeiro)
-		g.definir_opacidade(255)
+		//g.definir_opacidade(255)
 	}
 
 	funcao reiniciar()
@@ -323,18 +320,16 @@ programa
 
 	funcao carregar_imagens()
 	{
-		cadeia pasta_imagens = "./moon_lander/"
-
-		imagem_lua = g.carregar_imagem(pasta_imagens + "moon.png")
-		imagem_fundo = g.carregar_imagem(pasta_imagens + "fundo.jpg")
-		imagem_planetas = g.carregar_imagem(pasta_imagens + "planetas.png")
-		imagem_menu = g.carregar_imagem(pasta_imagens + "menu.jpg")
-		imagem_foguete = g.carregar_imagem(pasta_imagens + "foguete.png")
-		imagem_jato = g.carregar_imagem(pasta_imagens + "jato_foguete1.png")
-		imagem_plataforma = g.carregar_imagem(pasta_imagens + "plataforma_pouso.png")
-		imagem_jato2 = g.carregar_imagem(pasta_imagens + "jato_foguete2.png")
-		imagem_foguete_quebrado = g.carregar_imagem(pasta_imagens + "foguete_quebrado.png")
-		imagem_fogo = g.carregar_imagem(pasta_imagens + "fogo.png")
+            imagem_lua = g.carregar_imagem("moon.png")
+            imagem_fundo = g.carregar_imagem("fundo.jpg")
+            imagem_planetas = g.carregar_imagem("planetas.png")
+            imagem_menu = g.carregar_imagem("menu.jpg")
+            imagem_foguete = g.carregar_imagem("foguete.png")
+            imagem_jato = g.carregar_imagem("jato_foguete1.png")
+            imagem_plataforma = g.carregar_imagem("plataforma_pouso.png")
+            imagem_jato2 = g.carregar_imagem("jato_foguete2.png")
+            imagem_foguete_quebrado = g.carregar_imagem("foguete_quebrado.png")
+            imagem_fogo = g.carregar_imagem("fogo.png")
 	}
 
 	funcao liberar_imagens()
@@ -354,7 +349,7 @@ programa
 	funcao inicializar()
 	{
 		g.iniciar_modo_grafico(verdadeiro)
-		g.definir_dimensoes_janela(800, 600)
+		//g.definir_dimensoes_janela(800, 600)
 	}
 
 	funcao finalizar()

@@ -409,12 +409,8 @@ public class Compilador implements VisitanteASA {
         if(operandoEsquerdo == null) throw new ExcecaoVisitaASA("Erro ao obter referencia!", arvoreSintaticaAbstrata, noa);
         
         Value ponteiro = this.escopo.referenciar(operandoEsquerdo.getNome());
-        try {
-            Value valor = Util.convertTo(construtor, operandoDireito, tipo);
-            construtor.buildStore(valor, ponteiro);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Value valor = Util.convertTo(construtor, operandoDireito, tipo);
+        construtor.buildStore(valor, ponteiro);
         
         return ponteiro;
     }
@@ -539,7 +535,10 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoOperacaoModulo nom) throws ExcecaoVisitaASA {
-        return null;
+        Value valueEsquerdo = (Value)nom.getOperandoEsquerdo().aceitar(this);
+        Value valueDireito = (Value)nom.getOperandoDireito().aceitar(this);
+        return construtor.buildSDiv(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -547,7 +546,7 @@ public class Compilador implements VisitanteASA {
         Value valueEsquerdo = (Value)nobls.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobls.getOperandoDireito().aceitar(this);
         return construtor.buildShl(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToDouble(construtor, valueDireito), "");
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -555,7 +554,7 @@ public class Compilador implements VisitanteASA {
         Value valueEsquerdo = (Value)nobrs.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobrs.getOperandoDireito().aceitar(this);
         return construtor.buildLShr(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToDouble(construtor, valueDireito), "");
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -564,7 +563,7 @@ public class Compilador implements VisitanteASA {
         Value valueDireito = (Value)nobe.getOperandoDireito().aceitar(this);
         
         return construtor.buildAnd(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToDouble(construtor, valueDireito), "");
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -573,7 +572,7 @@ public class Compilador implements VisitanteASA {
         Value valueDireito = (Value)nobo.getOperandoDireito().aceitar(this);
         
         return construtor.buildOr(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToDouble(construtor, valueDireito), "");
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -581,7 +580,7 @@ public class Compilador implements VisitanteASA {
         Value valueEsquerdo = (Value)nobxor.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobxor.getOperandoDireito().aceitar(this);
         return construtor.buildXor(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToDouble(construtor, valueDireito), "");
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override

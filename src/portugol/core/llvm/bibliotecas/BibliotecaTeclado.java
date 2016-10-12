@@ -22,12 +22,6 @@ public class BibliotecaTeclado extends BibliotecaComEscopo {
         this.assinarFuncao(modulo, "tecla_pressionada", TypeRef.int1Type(), new TypeRef[]{TypeRef.int32Type()});
     }
 
-    private void addGlobalInt(Module module, Escopo escopo, String name, int val) {
-        Value ponteiro = module.addGlobal(TypeRef.int32Type(), name);
-        ponteiro.setInitializer(TypeRef.int32Type().constInt(val, true));
-        escopo.adicionar(name, ponteiro);
-    }
-
     @Override
     public void inicializarEscopo(Module module, Escopo escopo) {
         addGlobalInt(module, escopo, "TECLA_W", 0);

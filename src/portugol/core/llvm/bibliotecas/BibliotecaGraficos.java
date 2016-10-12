@@ -8,12 +8,13 @@ package portugol.core.llvm.bibliotecas;
 import org.llvm.Module;
 import org.llvm.TypeRef;
 import portugol.core.llvm.Biblioteca;
+import portugol.core.llvm.Escopo;
 
 /**
  *
  * @author Bernardo
  */
-public class BibliotecaGraficos extends AbstractBiblioteca {
+public class BibliotecaGraficos extends BibliotecaComEscopo {
    
     @Override
     public void inicializar(Module modulo) {
@@ -85,6 +86,15 @@ public class BibliotecaGraficos extends AbstractBiblioteca {
                         TypeRef.voidType()
                 ));
         
+        assinarFuncao(modulo, "desenhar_elipse", TypeRef.voidType(), 
+                new TypeRef[]{ 
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int1Type()
+                });
+        
         assinarFuncao(modulo, "desenhar_porcao_imagem", TypeRef.voidType(), 
                 new TypeRef[]{ 
                     TypeRef.int32Type(),
@@ -96,4 +106,9 @@ public class BibliotecaGraficos extends AbstractBiblioteca {
                     TypeRef.int32Type()
                 });
     }    
+
+    @Override
+    public void inicializarEscopo(Module module, Escopo escopo) {
+        addGlobalInt(module, escopo, "COR_PRETO", 0);
+    }
 }
