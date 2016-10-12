@@ -74,7 +74,7 @@ programa
 	/* Variáveis utilizadas para controlar o FPS e o tempo de jogo */
 	inteiro tempo_inicio_jogo = 0, tempo_total_jogo = 0
 
-	inteiro tempo_inicio = 0, tempo_decorrido = 0, tempo_restante = 0, tempo_quadro = 1000 / TAXA_ATUALIZACAO
+	inteiro tempo_inicio = 0, tempo_decorrido = 0, tempo_restante = 0, tempo_quadro = 11
 	
 	
 	/* Variáveis que armazenam o endereço de memória das imagens utilizadas no jogo */

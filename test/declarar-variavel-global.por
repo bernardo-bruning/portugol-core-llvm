@@ -1,8 +1,8 @@
 programa 
 {
-        inteiro numero_global = 5
+        inteiro numero_global = 10
         real real_global = 0.18
-
+        
 	funcao inicio () 
 	{
             inteiro numero = 10 + numero_global

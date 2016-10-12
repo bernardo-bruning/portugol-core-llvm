@@ -4,11 +4,12 @@
 
 declare i32 @escreva(i8*, ...)
 
+declare void @leia(i32, ...)
+
 define void @inicio() {
-entry:
+incio_funcao:
   %numero = alloca i32
   store i32 1, i32* %numero
-  %numero.carregado = load i32* %numero
-  %0 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0), i32 %numero.carregado)
-  
+  %numero1 = load i32* %numero
+  %0 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0), i32 %numero1)
 }

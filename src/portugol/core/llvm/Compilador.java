@@ -70,6 +70,7 @@ import br.univali.portugol.nucleo.asa.VisitanteASABasico;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.bridj.IntValuedEnum;
@@ -227,7 +228,9 @@ public class Compilador implements VisitanteASA {
             ponteiro.setInitializer(inicializacao);
         }
         else{
-            ponteiro = tipo.pointerType().constPointerNull();
+            ponteiro = construtor.buildAlloca(tipo.type(), ndv.getNome());
+            if(!Util.hasType(inicializacao, ponteiro.typeOf())) 
+                inicializacao = Util.convertTo(construtor, inicializacao, tipo);
             construtor.buildStore(inicializacao, ponteiro);
         }
         
@@ -333,15 +336,15 @@ public class Compilador implements VisitanteASA {
             if(tipo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
                 return construtor.buildFNeg(expressao, "");
         }
-        
-        throw new ExcecaoVisitaASA("Erro ao executar menos unário", arvoreSintaticaAbstrata, nmu);
+        Value fExpressao = construtor.buildFPToUI(expressao, TypeRef.doubleType().type(), "");
+        return construtor.buildFNeg(fExpressao, "");
     }
 
     @Override
     public Object visitar(NoNao nonao) throws ExcecaoVisitaASA {
         Value expressao = (Value)nonao.getExpressao().aceitar(this);
         
-        for (LLVMLibrary.LLVMTypeKind tipo : expressao.typeOf().getTypeKind()) {
+        for (LLVMLibrary.LLVMTypeKind tipo : expressao.typeOf().getTypeKind()) {            
             if(tipo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
                     return construtor.buildFNeg(expressao, "");
                 
@@ -352,14 +355,17 @@ public class Compilador implements VisitanteASA {
                 return construtor.buildFNeg(expressao, "");
         }
         
-        throw new ExcecaoVisitaASA("Erro ao executar nó não", arvoreSintaticaAbstrata, nonao);
+        Value fExpressao = construtor.buildFPToUI(expressao, TypeRef.doubleType().type(), "");
+        return construtor.buildFNeg(fExpressao, "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaIgualdade noli) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)noli.getOperandoEsquerdo().aceitar(this);
-        Value valueDireito = (Value)noli.getOperandoDireito().aceitar(this);
-        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, valueEsquerdo, valueDireito, noli);
+        Value valueDireito = (Value)noli.getOperandoDireito().aceitar(this);        
+        return operacao(LLVMLibrary.LLVMIntPredicate.LLVMIntEQ, 
+                Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToInteger(construtor, valueDireito), noli);
     }
 
     @Override
@@ -373,9 +379,12 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoAtribuicao noa) throws ExcecaoVisitaASA {
         NoReferencia operandoEsquerdo = (NoReferencia)noa.getOperandoEsquerdo();
         Value operandoDireito = (Value)noa.getOperandoDireito().aceitar(this);
+        TypeRef tipo = Util.convertType(operandoEsquerdo.getOrigemDaReferencia().getTipoDado());
+        if(operandoEsquerdo == null) throw new ExcecaoVisitaASA("Erro ao obter referencia!", arvoreSintaticaAbstrata, noa);
         
         Value ponteiro = this.escopo.referenciar(operandoEsquerdo.getNome());
-        construtor.buildStore(operandoDireito, ponteiro);
+        Value valor = Util.convertTo(construtor, operandoDireito, tipo);
+        construtor.buildStore(valor, ponteiro);
         return ponteiro;
     }
 
@@ -383,14 +392,16 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoLogicaE nole) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nole.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nole.getOperandoDireito().aceitar(this);
-        return construtor.buildAnd(valueEsquerdo, valueDireito, "");
+        return construtor.buildAnd(Util.convertToInteger(construtor, valueEsquerdo), 
+                                   Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoOperacaoLogicaOU nolou) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nolou.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nolou.getOperandoDireito().aceitar(this);
-        return construtor.buildOr(valueEsquerdo, valueDireito, "");
+        return construtor.buildOr(Util.convertToInteger(construtor, valueEsquerdo),
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     @Override
@@ -438,7 +449,9 @@ public class Compilador implements VisitanteASA {
                     return construtor.buildNSWAdd(valueEsquerdo, valueDireito, "");
             }
         }
-        throw new ExcecaoVisitaASA("Erro ao efetuar operação de adição", arvoreSintaticaAbstrata, nos);
+        Value esquerdo = Util.convertToDouble(construtor, valueEsquerdo);
+        Value direito = Util.convertToDouble(construtor, valueDireito);
+        return construtor.buildFAdd(esquerdo, direito, "");
     }
 
     @Override
@@ -459,7 +472,8 @@ public class Compilador implements VisitanteASA {
             }
         }
         
-        throw new ExcecaoVisitaASA("Erro ao efetuar operação de subtração, tipos inválidos", arvoreSintaticaAbstrata, nos);
+        return construtor.buildFSub(Util.convertToDouble(construtor, valueEsquerdo), Util.convertToDouble(construtor, valueDireito), "");
+        //throw new ExcecaoVisitaASA("Erro ao efetuar operação de subtração, tipos inválidos", arvoreSintaticaAbstrata, nos);
     }
 
     @Override
@@ -467,7 +481,8 @@ public class Compilador implements VisitanteASA {
         Value valueEsquerdo = (Value)nod.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nod.getOperandoDireito().aceitar(this);
         
-        return construtor.buildSDiv(valueEsquerdo, valueDireito, "");
+        return construtor.buildFDiv(Util.convertToDouble(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
@@ -486,7 +501,9 @@ public class Compilador implements VisitanteASA {
             }
         }
         
-        throw new ExcecaoVisitaASA("Erro ao efetuar operação de multiplicação", arvoreSintaticaAbstrata, nom);
+        return construtor.buildFMul(Util.convertToDouble(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
+        //throw new ExcecaoVisitaASA("Erro ao efetuar operação de multiplicação", arvoreSintaticaAbstrata, nom);
     }
 
     @Override
@@ -498,41 +515,49 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoBitwiseLeftShift nobls) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobls.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobls.getOperandoDireito().aceitar(this);
-        return construtor.buildShl(valueEsquerdo, valueDireito, "");
+        return construtor.buildShl(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseRightShift nobrs) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobrs.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobrs.getOperandoDireito().aceitar(this);
-        return construtor.buildLShr(valueEsquerdo, valueDireito, "");
+        return construtor.buildLShr(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseE nobe) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobe.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobe.getOperandoDireito().aceitar(this);
-        return construtor.buildAnd(valueEsquerdo, valueDireito, "");
+        
+        return construtor.buildAnd(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseOu nobo) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobo.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobo.getOperandoDireito().aceitar(this);
-        return construtor.buildOr(valueEsquerdo, valueDireito, "");
+        
+        return construtor.buildOr(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoOperacaoBitwiseXOR nobxor) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nobxor.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nobxor.getOperandoDireito().aceitar(this);
-        return construtor.buildXor(valueEsquerdo, valueDireito, "");
+        return construtor.buildXor(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
     }
 
     @Override
     public Object visitar(NoBitwiseNao nbn) throws ExcecaoVisitaASA {
         Value expressao = (Value)nbn.getExpressao().aceitar(this);
-        return construtor.buildNot(expressao, "");
+        
+        return construtor.buildNot(Util.convertToInteger(construtor, expressao), "");
     }
 
     @Override
@@ -678,7 +703,7 @@ public class Compilador implements VisitanteASA {
         
         pacotes.put(nib.getAlias(), biblioteca.getNomePacote());
         biblioteca.inicializar(module);
-        if(biblioteca instanceof BibliotecaComEscopo) ((BibliotecaComEscopo)biblioteca).inicializarEscopo(escopo);
+        if(biblioteca instanceof BibliotecaComEscopo) ((BibliotecaComEscopo)biblioteca).inicializarEscopo(module, escopo);
         return null;
     }
 
@@ -700,7 +725,9 @@ public class Compilador implements VisitanteASA {
             }
         }
         
-        throw new ExcecaoVisitaASA("Operação inválida para o tipo de dado", arvoreSintaticaAbstrata, noBloco);
+        return construtor.buildFCmp(convertPredicate(llvmIntPredicate), 
+                Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToInteger(construtor, valueDireito), "");
     }
 
     private IntValuedEnum<LLVMLibrary.LLVMRealPredicate> convertPredicate(LLVMLibrary.LLVMIntPredicate llvmIntPredicate) throws ExcecaoVisitaASA {
@@ -749,6 +776,56 @@ class Util {
             default:
                 return TypeRef.voidType();
         }
+    }
+    
+    public static boolean hasType(Value value, TypeRef isType) {
+        return hasType(value, isType.getTypeKind());
+    }
+    
+    public static boolean hasType(Value value, LLVMLibrary.LLVMTypeKind isType) {
+        for (LLVMLibrary.LLVMTypeKind type : value.typeOf().getTypeKind()) {
+            if(type == isType)
+                return true;
+        }
+        
+        return false;
+    }
+    
+    public static boolean hasType(Value value, IntValuedEnum<LLVMLibrary.LLVMTypeKind> isType) {
+        LLVMLibrary.LLVMTypeKind type = null;
+        Iterator<LLVMLibrary.LLVMTypeKind> i = isType.iterator();
+        while (i.hasNext()) {
+            type = i.next();
+        }
+        
+        for (LLVMLibrary.LLVMTypeKind t : value.typeOf().getTypeKind()) {
+            if(t == type)
+                return true;
+        }
+        
+        return false;
+    }
+
+    public static Value convertToInteger(Builder construtor, Value value){
+        return convertTo(construtor, value, TypeRef.int32Type());
+    }
+    
+    public static Value convertToDouble(Builder construtor, Value value) {
+        return convertTo(construtor, value, TypeRef.doubleType());
+    }
+    
+    public static Value convertTo(Builder construtor, Value value, TypeRef type)
+    {
+        if(hasType(value, type.getTypeKind()))
+            return value;
+        
+        if(hasType(value, LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind))
+            return construtor.buildUIToFP(value, type.type(), "");
+        
+        if(hasType(value, LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind))
+            return construtor.buildFPToUI(value, type.type(), "");
+        
+        return null;
     }
 }
 

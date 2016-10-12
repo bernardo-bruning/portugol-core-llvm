@@ -88,6 +88,11 @@ public class CompiladorTeste {
     }
     
     @Test
+    public void conversaoDinamica() throws Exception{
+        testarArquivo("conversao-dinamica");
+    }
+    
+    @Test
     public void testeMoonLander() throws Exception {
         try {
             testarArquivo("moon-lander");

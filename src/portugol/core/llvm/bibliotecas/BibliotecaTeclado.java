@@ -7,6 +7,7 @@ package portugol.core.llvm.bibliotecas;
 
 import org.llvm.Module;
 import org.llvm.TypeRef;
+import org.llvm.Value;
 import portugol.core.llvm.Biblioteca;
 import portugol.core.llvm.Escopo;
 
@@ -21,20 +22,22 @@ public class BibliotecaTeclado extends BibliotecaComEscopo {
         this.assinarFuncao(modulo, "tecla_pressionada", TypeRef.int1Type(), new TypeRef[]{TypeRef.int32Type()});
     }
 
-    private void addGlobalInt(Escopo escopo, String name) {
-        escopo.adicionar(name, TypeRef.int32Type().constInt(0, true));
+    private void addGlobalInt(Module module, Escopo escopo, String name, int val) {
+        Value ponteiro = module.addGlobal(TypeRef.int32Type(), name);
+        ponteiro.setInitializer(TypeRef.int32Type().constInt(val, true));
+        escopo.adicionar(name, ponteiro);
     }
 
     @Override
-    public void inicializarEscopo(Escopo escopo) {
-        addGlobalInt(escopo, "TECLA_W");
-        addGlobalInt(escopo, "TECLA_SETA_ACIMA");
-        addGlobalInt(escopo, "TECLA_ESC");
-        addGlobalInt(escopo, "TECLA_A");
-        addGlobalInt(escopo, "TECLA_SETA_ESQUERDA");
-        addGlobalInt(escopo, "TECLA_ENTER");
-        addGlobalInt(escopo, "TECLA_D");
-        addGlobalInt(escopo, "TECLA_SETA_DIREITA");
+    public void inicializarEscopo(Module module, Escopo escopo) {
+        addGlobalInt(module, escopo, "TECLA_W", 0);
+        addGlobalInt(module, escopo, "TECLA_SETA_ACIMA", 0);
+        addGlobalInt(module, escopo, "TECLA_ESC", 0);
+        addGlobalInt(module, escopo, "TECLA_A", 0);
+        addGlobalInt(module, escopo, "TECLA_SETA_ESQUERDA", 0);
+        addGlobalInt(module, escopo, "TECLA_ENTER", 0);
+        addGlobalInt(module, escopo, "TECLA_D", 0);
+        addGlobalInt(module, escopo, "TECLA_SETA_DIREITA", 0);
     }
     
 }

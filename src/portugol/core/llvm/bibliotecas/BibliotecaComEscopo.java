@@ -5,6 +5,7 @@
  */
 package portugol.core.llvm.bibliotecas;
 
+import org.llvm.Module;
 import portugol.core.llvm.Escopo;
 
 /**
@@ -12,5 +13,5 @@ import portugol.core.llvm.Escopo;
  * @author Bernardo
  */
 public abstract class BibliotecaComEscopo extends AbstractBiblioteca { 
-    public abstract void inicializarEscopo(Escopo escopo);
+    public abstract void inicializarEscopo(Module module, Escopo escopo);
 }
