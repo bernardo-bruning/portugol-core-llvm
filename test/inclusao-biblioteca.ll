@@ -66,4 +66,5 @@ incio_funcao:
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.definir_cor(i32 %cor1)
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_ponto(i32 10, i32 10)
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.encerrar_modo_grafico()
+  ret void
 }

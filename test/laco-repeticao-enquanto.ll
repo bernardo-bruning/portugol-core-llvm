@@ -22,4 +22,5 @@ enquanto.entrada:                                 ; preds = %enquanto.condicao
   br label %enquanto.condicao
 
 enquanto.saida:                                   ; preds = %enquanto.condicao
+  ret void
 }

@@ -220,8 +220,8 @@ public class Compilador implements VisitanteASA {
             bloco.aceitar(this);
         }
         
-//        if(!(ndf.getBlocos().get(ndf.getBlocos().size()-1) instanceof NoRetorne))
-//            construtor.buildRetVoid();
+        if(ndf.getBlocos().size() > 1 && !(ndf.getBlocos().get(ndf.getBlocos().size()-1) instanceof NoRetorne))
+            construtor.buildRetVoid();
         
         escopo = escopo.getParent();
         isGlobal = true;

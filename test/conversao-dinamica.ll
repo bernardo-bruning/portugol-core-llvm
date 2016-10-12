@@ -56,6 +56,7 @@ senao:                                            ; preds = %incio_funcao
   br label %saida
 
 saida:                                            ; preds = %senao, %se, %pulo
+  ret void
 }
 
 define void @inicio() {
@@ -69,4 +70,5 @@ incio_funcao:
   %1 = uitofp i32 %numero2 to double
   %numero3 = load i32* %numero
   call void @dois_param(double %1, i32 %numero3)
+  ret void
 }

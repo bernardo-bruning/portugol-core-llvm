@@ -115,7 +115,7 @@ incio_funcao:
   call void @reiniciar()
   br label %enquanto.condicao
 
-enquanto.condicao:                                ; preds = %senao, %incio_funcao
+enquanto.condicao:                                ; preds = %saida, %incio_funcao
   %TECLA_ESC = load i32* @TECLA_ESC
   %0 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_ESC)
   %1 = sub i1 false, %0
@@ -145,17 +145,18 @@ enquanto.saida:                                   ; preds = %enquanto.condicao
   br label %saida
 
 pulo:                                             ; No predecessors!
+  ret void
+
+se:                                               ; preds = %enquanto.entrada
   %tempo_restante1 = load i32* @tempo_restante
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaUtil.aguarde(i32 %tempo_restante1)
   br label %saida
 
-se:                                               ; preds = %enquanto.entrada
+senao:                                            ; preds = %enquanto.entrada
   br label %saida
 
-senao:                                            ; preds = %enquanto.entrada
+saida:                                            ; preds = %senao, %se, %enquanto.saida
   br label %enquanto.condicao
-
-saida:                                            ; preds = %se, %pulo, %enquanto.saida
 }
 
 define void @atualizar() {
@@ -337,10 +338,13 @@ senao10:                                          ; preds = %pulo1
   %13 = fcmp ogt double %velocidade_horizontal19, 0.000000e+00
   br i1 %13, label %se16, label %senao17
 
-saida11:                                          ; preds = %senao17, %se9, %se2
+saida11:                                          ; preds = %saida18, %se9, %se2
   br label %saida18
 
 pulo15:                                           ; No predecessors!
+  ret void
+
+se16:                                             ; preds = %senao10
   %velocidade_horizontal20 = load double* @velocidade_horizontal
   %ACELERACAO_GRAVIDADE21 = load double* @ACELERACAO_GRAVIDADE
   %PERCENTUAL_VELOCIDADE_HORIZONTAL22 = load double* @PERCENTUAL_VELOCIDADE_HORIZONTAL
@@ -349,13 +353,11 @@ pulo15:                                           ; No predecessors!
   store double %15, double* @velocidade_horizontal
   br label %saida18
 
-se16:                                             ; preds = %senao10
+senao17:                                          ; preds = %senao10
   br label %saida18
 
-senao17:                                          ; preds = %senao10
+saida18:                                          ; preds = %senao17, %se16, %saida11
   br label %saida11
-
-saida18:                                          ; preds = %se16, %pulo15, %saida11
 }
 
 define void @atualizar_posicao_foguete() {
@@ -372,6 +374,7 @@ incio_funcao:
   %4 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTipos.real_para_inteiro(double %3)
   %5 = add i32 %y_foguete, %4
   store i32 %5, i32* @y_foguete
+  ret void
 }
 
 define void @atualizar_estado_foguete() {
@@ -562,6 +565,7 @@ senao17:                                          ; preds = %saida
   br label %saida18
 
 saida18:                                          ; preds = %senao17, %se16, %pulo15
+  ret void
 }
 
 define void @desenhar_planetas() {
@@ -628,6 +632,7 @@ senao17:                                          ; preds = %saida
   br label %saida18
 
 saida18:                                          ; preds = %senao17, %se16, %pulo15
+  ret void
 }
 
 define void @desenhar() {
@@ -660,43 +665,46 @@ senao:                                            ; preds = %incio_funcao
   %quebrou = load i1* @quebrou
   br i1 %quebrou, label %se2, label %senao3
 
-saida:                                            ; preds = %pulo5, %se, %pulo
+saida:                                            ; preds = %se6, %se, %pulo
   br label %saida4
 
 pulo1:                                            ; No predecessors!
   %1 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.renderizar()
+  ret void
+
+se2:                                              ; preds = %senao
   %tempo_inicio = load i32* @tempo_inicio
   %2 = sdiv i32 %tempo_inicio, 150
   %3 = icmp ult i32 %2, 75
   br i1 %3, label %se6, label %senao7
 
-se2:                                              ; preds = %senao
+senao3:                                           ; preds = %senao
   br label %saida8
 
-senao3:                                           ; preds = %senao
+saida4:                                           ; preds = %pulo23, %se10, %saida
   call void @desenhar_sombra_foguete()
   %acelerando = load i1* @acelerando
   br i1 %acelerando, label %se20, label %senao21
 
-saida4:                                           ; preds = %saida22, %pulo9, %saida
+pulo5:                                            ; No predecessors!
   br label %saida22
 
-pulo5:                                            ; No predecessors!
+se6:                                              ; preds = %se2
   br label %saida
 
-se6:                                              ; preds = %pulo1
+senao7:                                           ; preds = %se2
   %atualizou = load i1* @atualizou
   %4 = sub i1 false, %atualizou
   br i1 %4, label %se10, label %senao11
 
-senao7:                                           ; preds = %pulo1
+saida8:                                           ; preds = %pulo19, %pulo9, %senao3
   br label %saida12
 
-saida8:                                           ; preds = %saida12, %saida8, %se2
+pulo9:                                            ; No predecessors!
   store i1 false, i1* @atualizou
   br label %saida8
 
-pulo9:                                            ; No predecessors!
+se10:                                             ; preds = %senao7
   %x_foguete13 = load i32* @x_foguete
   %y_foguete14 = load i32* @y_foguete
   %ALTURA_FOGUETE = load i32* @ALTURA_FOGUETE
@@ -717,7 +725,7 @@ pulo9:                                            ; No predecessors!
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.definir_cor(i32 16777215)
   br label %saida4
 
-se10:                                             ; preds = %se6
+senao11:                                          ; preds = %senao7
   %indice_fogo = load i32* @indice_fogo
   %11 = add i32 %indice_fogo, 1
   %12 = sdiv i32 %11, 6
@@ -725,32 +733,32 @@ se10:                                             ; preds = %se6
   store i1 true, i1* @atualizou
   br label %saida12
 
-senao11:                                          ; preds = %se6
+saida12:                                          ; preds = %saida12, %senao11, %saida8
   br label %saida12
 
-saida12:                                          ; preds = %senao11, %se10, %senao7
+pulo19:                                           ; No predecessors!
   br label %saida8
 
-pulo19:                                           ; No predecessors!
+se20:                                             ; preds = %saida4
   %tempo_inicio27 = load i32* @tempo_inicio
   %13 = sdiv i32 %tempo_inicio27, 100
   %14 = icmp ult i32 %13, 50
   br i1 %14, label %se24, label %senao25
 
-se20:                                             ; preds = %senao3
+senao21:                                          ; preds = %saida4
   br label %saida26
 
-senao21:                                          ; preds = %senao3
+saida22:                                          ; preds = %saida26, %saida22, %pulo5
   br label %saida22
 
-saida22:                                          ; preds = %senao25, %senao21, %saida4
+pulo23:                                           ; No predecessors!
   %x_foguete32 = load i32* @x_foguete
   %y_foguete33 = load i32* @y_foguete
   %imagem_foguete34 = load i32* @imagem_foguete
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %x_foguete32, i32 %y_foguete33, i32 %imagem_foguete34)
   br label %saida4
 
-pulo23:                                           ; No predecessors!
+se24:                                             ; preds = %se20
   %x_foguete28 = load i32* @x_foguete
   %15 = add i32 %x_foguete28, 10
   %y_foguete29 = load i32* @y_foguete
@@ -759,7 +767,7 @@ pulo23:                                           ; No predecessors!
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %15, i32 %16, i32 %imagem_jato)
   br label %saida26
 
-se24:                                             ; preds = %pulo19
+senao25:                                          ; preds = %se20
   %x_foguete30 = load i32* @x_foguete
   %17 = add i32 %x_foguete30, 10
   %y_foguete31 = load i32* @y_foguete
@@ -768,10 +776,8 @@ se24:                                             ; preds = %pulo19
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %17, i32 %18, i32 %imagem_jato2)
   br label %saida26
 
-senao25:                                          ; preds = %pulo19
+saida26:                                          ; preds = %senao25, %se24, %senao21
   br label %saida22
-
-saida26:                                          ; preds = %se24, %pulo23, %se20
 }
 
 define void @desenhar_sombra_foguete() {
@@ -837,6 +843,7 @@ incio_funcao:
   %largura_sombra9 = load i32* %largura_sombra
   %altura_sombra10 = load i32* %altura_sombra
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_elipse(i32 %x_sombra7, i32 %y_sombra8, i32 %largura_sombra9, i32 %altura_sombra10, i1 true)
+  ret void
 }
 
 define void @reiniciar() {
@@ -853,6 +860,7 @@ incio_funcao:
   %1 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaUtil.tempo_decorrido()
   store i32 %1, i32* @tempo_inicio_jogo
   store i32 0, i32* @tempo_total_jogo
+  ret void
 }
 
 define void @carregar_imagens() {
@@ -877,6 +885,7 @@ incio_funcao:
   store i32 %8, i32* @imagem_foguete_quebrado
   %9 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.carregar_imagem(i8* getelementptr inbounds ([9 x i8]* @9, i32 0, i32 0))
   store i32 %9, i32* @imagem_fogo
+  ret void
 }
 
 define void @liberar_imagens() {
@@ -901,6 +910,7 @@ incio_funcao:
   %8 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.liberar_imagem(i32 %imagem_foguete_quebrado)
   %imagem_fogo = load i32* @imagem_fogo
   %9 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.liberar_imagem(i32 %imagem_fogo)
+  ret void
 }
 
 define void @inicializar() {
@@ -912,6 +922,7 @@ define void @finalizar() {
 incio_funcao:
   call void @liberar_imagens()
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.encerrar_modo_grafico()
+  ret void
 }
 
 define void @inicio() {
@@ -920,4 +931,5 @@ incio_funcao:
   call void @inicializar()
   call void @jogo()
   call void @finalizar()
+  ret void
 }

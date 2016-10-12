@@ -17,6 +17,7 @@ incio_funcao:
   %1 = add i32 %numero_global1, 10
   store i32 %1, i32* @numero_global
   call void @segunda_operacao()
+  ret void
 }
 
 define void @segunda_operacao() {
@@ -27,4 +28,5 @@ incio_funcao:
   %numero1 = load i32* %numero
   %0 = add i32 %numero_global, %numero1
   store i32 %0, i32* @numero_global
+  ret void
 }

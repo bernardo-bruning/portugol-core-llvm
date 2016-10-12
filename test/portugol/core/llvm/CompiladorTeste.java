@@ -5,12 +5,15 @@ import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
 import br.univali.portugol.nucleo.asa.NoBloco;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import org.llvm.Module;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 import static org.junit.Assert.assertEquals;
+import org.testng.reporters.Files;
 
 /**
  *
@@ -116,7 +119,14 @@ public class CompiladorTeste {
         Module module = compilador.getLLVM();
         module.dumpModule();
         module.writeBitcodeToFile(fileTest + biteCodeExtension);
+        
+//        String codigo = obterCodigoArquivo(fileTest.concat(llvmExtension));
+//        PrintWriter save = new PrintWriter("test/" + fileName + llvmExtension);
+//        save.print(codigo);
+//        save.close();
+        
         assertFile(codigoSaida);
+        
     }
     
     private String obterCodigoArquivo(String fileName) throws FileNotFoundException {
@@ -135,7 +145,7 @@ public class CompiladorTeste {
             Scanner scanner = new Scanner(new File(fileTest.concat(llvmExtension)));
             String llvmCode = scanner.useDelimiter("\\A").next();
             scanner.close();
-
+            
             assertEquals(expected.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""), llvmCode.replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", ""));
         } catch (Exception e) {
             e.printStackTrace();
