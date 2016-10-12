@@ -1,27 +1,25 @@
-; ModuleID = 'programa'
-
-@0 = private unnamed_addr constant [7 x i8] c"Teste\0A\00"
+; ModuleID = 'programa.bc'
 
 declare i32 @escreva(i8*, ...)
 
+declare void @leia(i32, ...)
+
 define void @inicio() {
-entry:
+incio_funcao:
   %contador = alloca i32
   store i32 0, i32* %contador
   br label %enquanto.entrada
 
 enquanto.condicao:                                ; preds = %enquanto.entrada
-  %contador.carregado = load i32* %contador
-  %0 = icmp ult i32 %contador.carregado, 10
+  %contador1 = load i32* %contador
+  %0 = icmp ult i32 %contador1, 10
   br i1 %0, label %enquanto.entrada, label %enquanto.saida
 
-enquanto.entrada:                                 ; preds = %enquanto.condicao, %entry
-  %contador.carregado1 = load i32* %contador
-  %1 = add i32 %contador.carregado1, 1
+enquanto.entrada:                                 ; preds = %enquanto.condicao, %incio_funcao
+  %contador2 = load i32* %contador
+  %1 = add i32 %contador2, 1
   store i32 %1, i32* %contador
-  %2 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([7 x i8]* @0, i32 0, i32 0))
   br label %enquanto.condicao
 
 enquanto.saida:                                   ; preds = %enquanto.condicao
-  
 }

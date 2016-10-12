@@ -6,7 +6,7 @@ programa
         faca
         {
             contador++
-            escreva("Teste\n")
+            //escreva("Teste\n")
         }
         enquanto (contador<10)
     }

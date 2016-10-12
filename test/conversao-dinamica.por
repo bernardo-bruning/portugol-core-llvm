@@ -10,8 +10,10 @@ programa
         funcao teste(real numero)
         {
             inteiro t = numero
-            g.desenhar_porcao_imagem(0, 0, 0, 0, 0, 0, 0)
-            //escreva("%d", t)
+            se(t > 100) {
+                g.desenhar_porcao_imagem(0, 0, 0, 0, 0, 0, 0)
+            } senao {
+            }
         }
 
 	funcao inicio() 

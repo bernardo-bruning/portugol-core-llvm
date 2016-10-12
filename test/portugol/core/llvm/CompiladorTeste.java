@@ -115,7 +115,7 @@ public class CompiladorTeste {
         Compilador compilador = new Compilador(codigoEntrada);
         Module module = compilador.getLLVM();
         module.dumpModule();
-        module.writeBitcodeToFile(fileTest);
+        module.writeBitcodeToFile(fileTest + biteCodeExtension);
         assertFile(codigoSaida);
     }
     
@@ -128,7 +128,7 @@ public class CompiladorTeste {
     
     private void assertFile(String expected) {
         try {
-            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "start", "llvm-dis", fileTest);
+            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "start", "llvm-dis", fileTest + biteCodeExtension);
             pb.start();
             
             TimeUnit.SECONDS.sleep(1);

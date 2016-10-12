@@ -220,6 +220,9 @@ public class Compilador implements VisitanteASA {
             bloco.aceitar(this);
         }
         
+//        if(!(ndf.getBlocos().get(ndf.getBlocos().size()-1) instanceof NoRetorne))
+//            construtor.buildRetVoid();
+        
         escopo = escopo.getParent();
         isGlobal = true;
         return funcao;
@@ -669,6 +672,7 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoSe nose) throws ExcecaoVisitaASA {
+        BasicBlock blocoPular = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("pulo");
         BasicBlock blocoSe = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("se");
         BasicBlock blocoSeNao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("senao");
         BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("saida");
@@ -677,9 +681,9 @@ public class Compilador implements VisitanteASA {
         Value condicao = (Value)nose.getCondicao().aceitar(this);
         construtor.buildCondBr(condicao, blocoSe, blocoSeNao);
         
-        construtor.buildBr(blocoSe);
+        construtor.buildBr(blocoSaida);
         
-        construtor.clearInsertionPosition();
+        //construtor.clearInsertionPosition();
         construtor.positionBuilderAtEnd(blocoSe);
         blocoEscopo = blocoSe;
         for (NoBloco bloco : nose.getBlocosVerdadeiros()) {
@@ -688,7 +692,7 @@ public class Compilador implements VisitanteASA {
         
         construtor.buildBr(blocoSaida);
         
-        construtor.clearInsertionPosition();
+        //construtor.clearInsertionPosition();
         construtor.positionBuilderAtEnd(blocoSeNao);
         blocoEscopo = blocoSeNao;
         if(nose.getBlocosFalsos() != null)
@@ -698,8 +702,8 @@ public class Compilador implements VisitanteASA {
         
         construtor.buildBr(blocoSaida);
         
-        construtor.clearInsertionPosition();
-        construtor.positionBuilderAtEnd(blocoSaida);        
+        //construtor.clearInsertionPosition();
+        construtor.positionBuilderAtEnd(blocoSaida);
         blocoEscopo = blocoSaida;
         return null;
     }

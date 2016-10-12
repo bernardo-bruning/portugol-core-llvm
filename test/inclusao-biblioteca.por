@@ -1,6 +1,10 @@
 programa 
 {
         inclua biblioteca Graficos --> g
+	inclua biblioteca Teclado --> t
+	inclua biblioteca Util --> u
+	inclua biblioteca Tipos --> tp
+	inclua biblioteca Matematica --> m
 	funcao inicio () 
 	{ 
             g.iniciar_modo_grafico(falso)

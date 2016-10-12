@@ -1,14 +1,11 @@
-; ModuleID = 'programa'
-
-@0 = private unnamed_addr constant [3 x i8] c"%d\00"
+; ModuleID = 'programa.bc'
 
 declare i32 @escreva(i8*, ...)
 
+declare void @leia(i32, ...)
+
 define void @inicio() {
-entry:
+incio_funcao:
   %teste = alloca i1
   store i1 false, i1* %teste
-  %teste.carregado = load i1* %teste
-  %0 = call i32 (i8*, ...)* @escreva(i8* getelementptr inbounds ([3 x i8]* @0, i32 0, i32 0), i1 %teste.carregado)
-  
 }
