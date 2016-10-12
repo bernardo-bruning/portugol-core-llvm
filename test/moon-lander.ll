@@ -1,40 +1,4 @@
 
-/* CLIQUE NO SINAL DE "+", À ESQUERDA, PARA EXIBIR A DESCRIÇÃO DO EXEMPLO
- *  
- * Copyright (C) 2014 - UNIVALI - Universidade do Vale do Itajaí
- * 
- * Este arquivo de código fonte é livre para utilização, cópia e/ou modificação
- * desde que este cabeçalho, contendo os direitos autorais e a descrição do programa, 
- * seja mantido.
- * 
- * Se tiver dificuldade em compreender este exemplo, acesse as vídeoaulas do Portugol 
- * Studio para auxiliá-lo:
- * 
- * https://www.youtube.com/watch?v=K02TnB3IGnQ&list=PLb9yvNDCid3jQAEbNoPHtPR0SWwmRSM-t
- * 
- * Descrição:
- * 
- * 	Este exemplo é um Jogo escrito em Portugol no qual o jogador controla uma nave que
- * 	deve pousar na lua o mais rápido possível. O exemplo demonstra como utilizar algumas 
- * 	das bibliotecas existentes no Portugol. Neste exemplo, também é possível ver algumas
- * 	técnicas utilizadas na criação de jogos.
- *	
- *	As regras do jogo são as sguintes:
- *	
- *		a) O jogador perde se guiar a nave para fora da tela
- *		b) O jogador perde se pousar a nave fora da plataforma de pouso
- *		c) O jogador perde se pousar a nave muito rápido
- * 	
- *   Jogo adaptado de http://www.gametutorial.net/article/Keyboard-input---Moon-lander
- * 	
- * Autores:
- * 
- * 	Fillipi Domingos Pelz
- *   Luiz Fernando Noschang (noschang@univali.br)
- *   
- * Data: 08/09/2013
- */
- 
 programa
 {
 	inclua biblioteca Graficos --> g
@@ -231,25 +195,25 @@ programa
 		}
 		senao se (y_foguete + ALTURA_FOGUETE - 10 > y_plataforma)
 		{
-			se ((x_foguete > x_plataforma) e (x_foguete < x_plataforma + LARGURA_PLATAFORMA - LARGURA_FOGUETE))
-            	{
-				se (velocidade_vertical <= VELOCIDADE_MAXIMA_POUSO)
-				{
-					pousou = verdadeiro
-					tempo_total_jogo = u.tempo_decorrido() - tempo_inicio_jogo
-				}
-                	senao
-                	{
-                    	quebrou = verdadeiro
-            		}
-            	}
-            	senao
-            	{
-                	se(y_foguete + ALTURA_FOGUETE > tp.real_para_inteiro(ALTURA_TELA - 57 + m.valor_absoluto(400.0-x_foguete+ (LARGURA_FOGUETE / 2))/7))
-                	{
-                    	quebrou = verdadeiro
-            		}
-            	}
+                    se ((x_foguete > x_plataforma) e (x_foguete < x_plataforma + LARGURA_PLATAFORMA - LARGURA_FOGUETE))
+                    {
+                                    se (velocidade_vertical <= VELOCIDADE_MAXIMA_POUSO)
+                                    {
+                                            pousou = verdadeiro
+                                            tempo_total_jogo = u.tempo_decorrido() - tempo_inicio_jogo
+                                    }
+                            senao
+                            {
+                            quebrou = verdadeiro
+                            }
+                    }
+                    senao
+                    {
+                            se(y_foguete + ALTURA_FOGUETE > tp.real_para_inteiro(ALTURA_TELA - 57 + m.valor_absoluto(400.0-x_foguete+ (LARGURA_FOGUETE / 2))/7))
+                            {
+                            quebrou = verdadeiro
+                            }
+                    }
 		}
 	}
 

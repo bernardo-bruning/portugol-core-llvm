@@ -17,6 +17,7 @@ public class BibliotecaMatematica extends AbstractBiblioteca {
     @Override
     public void inicializar(Module modulo) {
         assinarFuncao(modulo, "arredondar", TypeRef.doubleType(), new TypeRef[] { TypeRef.doubleType(), TypeRef.int32Type() });
+        assinarFuncao(modulo, "valor_absoluto", TypeRef.int32Type(), new TypeRef[] { TypeRef.doubleType() });
     }
     
 }

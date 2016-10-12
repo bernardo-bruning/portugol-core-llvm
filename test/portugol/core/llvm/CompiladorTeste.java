@@ -101,8 +101,10 @@ public class CompiladorTeste {
                 String mensagem = String.format("Erro linha: %d", ((NoBloco)e.getNo()).getTrechoCodigoFonte().getLinha());
                 throw new Exception(mensagem, e);
             }
+            else e.printStackTrace();
         } catch(RuntimeException e){
             System.out.println("Exceçao em tempo de execução ocorreu!");
+            e.printStackTrace();
         }
     }
     

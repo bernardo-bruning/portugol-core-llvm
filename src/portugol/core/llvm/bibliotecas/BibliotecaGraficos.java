@@ -84,5 +84,16 @@ public class BibliotecaGraficos extends AbstractBiblioteca {
                 .functionType(
                         TypeRef.voidType()
                 ));
+        
+        assinarFuncao(modulo, "desenhar_porcao_imagem", TypeRef.voidType(), 
+                new TypeRef[]{ 
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type(),
+                    TypeRef.int32Type()
+                });
     }    
 }

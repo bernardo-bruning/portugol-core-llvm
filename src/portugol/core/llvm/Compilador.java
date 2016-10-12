@@ -154,23 +154,40 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoChamadaFuncao ncf) throws ExcecaoVisitaASA {
-        List<Value> args = new ArrayList<>();
-        List<NoExpressao> parametros = ncf.getParametros();
-        if(parametros != null) {
-            for (NoExpressao param : parametros) {
-                args.add((Value)param.aceitar(this));
-            }
-        }
-        
-        Value[] arr = new Value[args.size()];
-        
         try {
             String pacote = pacotes.containsKey(ncf.getEscopo())?pacotes.get(ncf.getEscopo()):"";
             Value function = module.getNamedFunction(pacote + ncf.getNome());
             
+            List<Value> args = new ArrayList<>();
+            List<NoExpressao> parametros = ncf.getParametros();
+            if(parametros != null) {
+                for (int i = 0; i < parametros.size(); i++) {
+                    Value valor = (Value)parametros.get(i).aceitar(this);
+//                    if(declaracao != null){
+//                        
+//                    }
+//                    else {
+//                        TypeRef tipo = function.getParam(i).typeOf();
+//                        if(!Util.hasType(valor, tipo)){ 
+//                            System.out.println("Aplicando conversão de tipo!");
+//                            valor = Util.convertTo(construtor, valor, tipo);
+//                        }   
+//                        
+//                        System.out.println(String.format("Declaração não identificada da função '%s' na linha %d", ncf.getNome(), ncf.getTrechoCodigoFonte().getLinha()));
+//
+//                    }
+
+                    TypeRef tipo = function.getParam(i).typeOf();
+                    if(!Util.hasType(valor, tipo)) 
+                        valor = Util.convertTo(construtor, valor, tipo);   
+                    args.add(valor);
+                }
+            }
+            Value[] arr = new Value[args.size()];
+            
             return construtor.buildCall(function, "", args.toArray(arr));
         } catch (Exception e) {
-            throw new ExcecaoVisitaASA(String.format("Não foi possível chamar a função %s com os parametros %s", ncf.getNome(), Arrays.toString(arr)), arvoreSintaticaAbstrata, ncf);
+            throw new ExcecaoVisitaASA(String.format("Não foi possível chamar a função %s", ncf.getNome()), arvoreSintaticaAbstrata, ncf);
         }
     }
 
@@ -181,14 +198,23 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoDeclaracaoFuncao ndf) throws ExcecaoVisitaASA {
-        isGlobal = false;
+        isGlobal = false;        
         escopo = new Escopo(escopo);
         String nomeFuncao = ndf.getNome();
         Value funcao = this.module.getNamedFunction(nomeFuncao);
+        
         funcao.setFunctionCallConv(LLVMLibrary.LLVMCallConv.LLVMCCallConv);
         blocoEscopo = funcao.appendBasicBlock("incio_funcao");
         construtor = Builder.createBuilder();
         construtor.positionBuilderAtEnd(this.blocoEscopo);
+        
+        for (NoDeclaracaoParametro parametro : ndf.getParametros()) {
+            Value valor = funcao.getParam(parametro.getIndice());
+//            Value vParametro = construtor.buildAlloca(valor.typeOf().type(), parametro.getNome());
+//            construtor.buildStore(valor, vParametro);
+//            escopo.adicionar(parametro.getNome(), vParametro);
+            escopo.adicionar(parametro.getNome(), valor);
+        }
         
         for (NoBloco bloco : ndf.getBlocos()) {
             bloco.aceitar(this);
@@ -383,8 +409,13 @@ public class Compilador implements VisitanteASA {
         if(operandoEsquerdo == null) throw new ExcecaoVisitaASA("Erro ao obter referencia!", arvoreSintaticaAbstrata, noa);
         
         Value ponteiro = this.escopo.referenciar(operandoEsquerdo.getNome());
-        Value valor = Util.convertTo(construtor, operandoDireito, tipo);
-        construtor.buildStore(valor, ponteiro);
+        try {
+            Value valor = Util.convertTo(construtor, operandoDireito, tipo);
+            construtor.buildStore(valor, ponteiro);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         return ponteiro;
     }
 
@@ -618,7 +649,7 @@ public class Compilador implements VisitanteASA {
             String mensagem = String.format("Erro ao referenciar a váriavel %s", nrv.getNome());
             throw new ExcecaoVisitaASA(mensagem, arvoreSintaticaAbstrata, nrv);
         }
-        
+        if(nrv.getOrigemDaReferencia() instanceof NoDeclaracaoParametro) return referencia;
         return construtor.buildLoad(referencia, nrv.getNome());
     }
 
@@ -842,7 +873,14 @@ class AssinarFuncoes extends VisitanteASABasico{
     @Override
     public Object visitar(NoDeclaracaoFuncao declaracaoFuncao) throws ExcecaoVisitaASA {
         TypeRef tipoRetorno = Util.convertType(declaracaoFuncao.getTipoDado());
-        modulo.addFunction(declaracaoFuncao.getNome(), TypeRef.functionType(tipoRetorno));
+        
+        List<TypeRef> parametros = new ArrayList<>();
+        
+        for (NoDeclaracaoParametro parametro : declaracaoFuncao.getParametros()) {
+            parametros.add(Util.convertType(parametro.getTipoDado()));
+        }
+        
+        modulo.addFunction(declaracaoFuncao.getNome(), TypeRef.functionType(tipoRetorno, false, parametros.toArray(new TypeRef[parametros.size()])));
         return null;
     }
 
