@@ -15,4 +15,5 @@ define void @inicio() {
 incio_funcao:
   %0 = call i8* @mensagem()
   %1 = call i32 (i8*, ...)* @escreva(i8* %0)
+  ret void
 }

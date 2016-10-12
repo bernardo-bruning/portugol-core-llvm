@@ -220,7 +220,7 @@ public class Compilador implements VisitanteASA {
             bloco.aceitar(this);
         }
         
-        if(ndf.getBlocos().size() > 1 && !(ndf.getBlocos().get(ndf.getBlocos().size()-1) instanceof NoRetorne))
+        if(ndf.getBlocos().size() > 0 && !(ndf.getBlocos().get(ndf.getBlocos().size()-1) instanceof NoRetorne))
             construtor.buildRetVoid();
         
         escopo = escopo.getParent();
@@ -672,12 +672,13 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoSe nose) throws ExcecaoVisitaASA {
-        BasicBlock blocoPular = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("pulo");
+        BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("condicao");
         BasicBlock blocoSe = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("se");
         BasicBlock blocoSeNao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("senao");
         BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("saida");
         
-        
+        construtor.positionBuilderAtEnd(blocoCondicao
+        );
         Value condicao = (Value)nose.getCondicao().aceitar(this);
         construtor.buildCondBr(condicao, blocoSe, blocoSeNao);
         

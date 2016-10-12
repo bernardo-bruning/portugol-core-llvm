@@ -8,5 +8,9 @@ programa
 		senao {
 			escreva("Acessou senao!")
 		}
+
+                se(2>1) {
+                        escreva("Teste!")
+                }
 	} 
 }

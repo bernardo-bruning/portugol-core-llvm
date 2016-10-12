@@ -134,6 +134,9 @@ enquanto.entrada:                                 ; preds = %enquanto.condicao
   %tempo_decorrido = load i32* @tempo_decorrido
   %5 = sub i32 %tempo_quadro, %tempo_decorrido
   store i32 %5, i32* @tempo_restante
+  ret void
+
+enquanto.saida:                                   ; preds = %enquanto.condicao
   %TAXA_ATUALIZACAO = load i32* @TAXA_ATUALIZACAO
   %6 = icmp sgt i32 %TAXA_ATUALIZACAO, 0
   %tempo_restante = load i32* @tempo_restante
@@ -141,21 +144,18 @@ enquanto.entrada:                                 ; preds = %enquanto.condicao
   %8 = and i1 %6, %7
   br i1 %8, label %se, label %senao
 
-enquanto.saida:                                   ; preds = %enquanto.condicao
+condicao:                                         ; No predecessors!
   br label %saida
 
-pulo:                                             ; No predecessors!
-  ret void
-
-se:                                               ; preds = %enquanto.entrada
+se:                                               ; preds = %enquanto.saida
   %tempo_restante1 = load i32* @tempo_restante
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaUtil.aguarde(i32 %tempo_restante1)
   br label %saida
 
-senao:                                            ; preds = %enquanto.entrada
+senao:                                            ; preds = %enquanto.saida
   br label %saida
 
-saida:                                            ; preds = %senao, %se, %enquanto.saida
+saida:                                            ; preds = %senao, %se, %condicao
   br label %enquanto.condicao
 }
 
@@ -171,7 +171,7 @@ incio_funcao:
   %4 = and i1 %2, %3
   br i1 %4, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -182,24 +182,25 @@ se:                                               ; preds = %incio_funcao
   br label %saida
 
 senao:                                            ; preds = %incio_funcao
+  ret void
+
+saida:                                            ; preds = %saida4, %se, %condicao
   %TECLA_ENTER = load i32* @TECLA_ENTER
   %5 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_ENTER)
   br i1 %5, label %se2, label %senao3
 
-saida:                                            ; preds = %senao3, %se, %pulo
+condicao1:                                        ; No predecessors!
   br label %saida4
 
-pulo1:                                            ; No predecessors!
+se2:                                              ; preds = %saida
   call void @reiniciar()
   br label %saida4
 
-se2:                                              ; preds = %senao
+senao3:                                           ; preds = %saida
   br label %saida4
 
-senao3:                                           ; preds = %senao
+saida4:                                           ; preds = %senao3, %se2, %condicao1
   br label %saida
-
-saida4:                                           ; preds = %se2, %pulo1, %saida
 }
 
 define void @atualizar_velocidade_vertical() {
@@ -211,7 +212,7 @@ incio_funcao:
   %2 = or i1 %0, %1
   br i1 %2, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -219,54 +220,55 @@ se:                                               ; preds = %incio_funcao
   %ACELERACAO_FOGUETE = load double* @ACELERACAO_FOGUETE
   %3 = fsub double %velocidade_vertical, %ACELERACAO_FOGUETE
   store double %3, double* @velocidade_vertical
-  %velocidade_vertical5 = load double* @velocidade_vertical
-  %VELOCIDADE_MAXIMA_FOGUETE = load double* @VELOCIDADE_MAXIMA_FOGUETE
-  %4 = fsub double -0.000000e+00, %VELOCIDADE_MAXIMA_FOGUETE
-  %5 = fcmp ult double %velocidade_vertical5, %4
-  br i1 %5, label %se2, label %senao3
-
-senao:                                            ; preds = %incio_funcao
-  br label %saida4
-
-saida:                                            ; preds = %senao10, %saida4, %pulo
   %velocidade_vertical7 = load double* @velocidade_vertical
   %ACELERACAO_GRAVIDADE = load double* @ACELERACAO_GRAVIDADE
-  %6 = fadd double %velocidade_vertical7, %ACELERACAO_GRAVIDADE
-  store double %6, double* @velocidade_vertical
-  %velocidade_vertical12 = load double* @velocidade_vertical
-  %VELOCIDADE_MAXIMA_GRAVIDADE = load double* @VELOCIDADE_MAXIMA_GRAVIDADE
-  %7 = fcmp ogt double %velocidade_vertical12, %VELOCIDADE_MAXIMA_GRAVIDADE
-  br i1 %7, label %se9, label %senao10
+  %4 = fadd double %velocidade_vertical7, %ACELERACAO_GRAVIDADE
+  store double %4, double* @velocidade_vertical
+  ret void
 
-pulo1:                                            ; No predecessors!
-  br label %saida11
+senao:                                            ; preds = %incio_funcao
+  %velocidade_vertical5 = load double* @velocidade_vertical
+  %VELOCIDADE_MAXIMA_FOGUETE = load double* @VELOCIDADE_MAXIMA_FOGUETE
+  %5 = fsub double -0.000000e+00, %VELOCIDADE_MAXIMA_FOGUETE
+  %6 = fcmp ult double %velocidade_vertical5, %5
+  br i1 %6, label %se2, label %senao3
 
-se2:                                              ; preds = %se
+saida:                                            ; preds = %saida11, %senao3, %condicao
+  br label %saida4
+
+condicao1:                                        ; No predecessors!
   %VELOCIDADE_MAXIMA_FOGUETE6 = load double* @VELOCIDADE_MAXIMA_FOGUETE
-  %8 = fsub double -0.000000e+00, %VELOCIDADE_MAXIMA_FOGUETE6
-  store double %8, double* @velocidade_vertical
+  %7 = fsub double -0.000000e+00, %VELOCIDADE_MAXIMA_FOGUETE6
+  store double %7, double* @velocidade_vertical
   br label %saida4
 
-senao3:                                           ; preds = %se
+se2:                                              ; preds = %senao
   br label %saida4
 
-saida4:                                           ; preds = %senao3, %se2, %senao
+senao3:                                           ; preds = %senao
   store i1 true, i1* @acelerando
   br label %saida
 
-pulo8:                                            ; No predecessors!
+saida4:                                           ; preds = %se2, %condicao1, %saida
+  %velocidade_vertical12 = load double* @velocidade_vertical
+  %VELOCIDADE_MAXIMA_GRAVIDADE = load double* @VELOCIDADE_MAXIMA_GRAVIDADE
+  %8 = fcmp ogt double %velocidade_vertical12, %VELOCIDADE_MAXIMA_GRAVIDADE
+  br i1 %8, label %se9, label %senao10
+
+condicao8:                                        ; No predecessors!
+  br label %saida11
+
+se9:                                              ; preds = %saida4
   %VELOCIDADE_MAXIMA_GRAVIDADE13 = load double* @VELOCIDADE_MAXIMA_GRAVIDADE
   store double %VELOCIDADE_MAXIMA_GRAVIDADE13, double* @velocidade_vertical
   br label %saida11
 
-se9:                                              ; preds = %saida
+senao10:                                          ; preds = %saida4
   br label %saida11
 
-senao10:                                          ; preds = %saida
+saida11:                                          ; preds = %senao10, %se9, %condicao8
   store i1 false, i1* @acelerando
   br label %saida
-
-saida11:                                          ; preds = %se9, %pulo8, %pulo1
 }
 
 define void @atualizar_velocidade_horizontal() {
@@ -278,7 +280,7 @@ incio_funcao:
   %2 = or i1 %0, %1
   br i1 %2, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -295,36 +297,36 @@ senao:                                            ; preds = %incio_funcao
   %5 = fcmp ult double %velocidade_horizontal5, 0.000000e+00
   br i1 %5, label %se2, label %senao3
 
-saida:                                            ; preds = %pulo8, %se, %pulo
+saida:                                            ; preds = %senao3, %se, %condicao
   br label %saida4
 
-pulo1:                                            ; No predecessors!
-  %TECLA_D = load i32* @TECLA_D
-  %6 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_D)
-  %TECLA_SETA_DIREITA = load i32* @TECLA_SETA_DIREITA
-  %7 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_SETA_DIREITA)
-  %8 = or i1 %6, %7
-  br i1 %8, label %se9, label %senao10
-
-se2:                                              ; preds = %senao
-  br label %saida11
-
-senao3:                                           ; preds = %senao
+condicao1:                                        ; No predecessors!
   %velocidade_horizontal6 = load double* @velocidade_horizontal
   %ACELERACAO_GRAVIDADE = load double* @ACELERACAO_GRAVIDADE
   %PERCENTUAL_VELOCIDADE_HORIZONTAL7 = load double* @PERCENTUAL_VELOCIDADE_HORIZONTAL
-  %9 = fmul double %ACELERACAO_GRAVIDADE, %PERCENTUAL_VELOCIDADE_HORIZONTAL7
-  %10 = fadd double %velocidade_horizontal6, %9
-  store double %10, double* @velocidade_horizontal
+  %6 = fmul double %ACELERACAO_GRAVIDADE, %PERCENTUAL_VELOCIDADE_HORIZONTAL7
+  %7 = fadd double %velocidade_horizontal6, %6
+  store double %7, double* @velocidade_horizontal
   br label %saida4
 
-saida4:                                           ; preds = %saida4, %senao3, %saida
+se2:                                              ; preds = %senao
   br label %saida4
 
-pulo8:                                            ; No predecessors!
+senao3:                                           ; preds = %senao
   br label %saida
 
-se9:                                              ; preds = %pulo1
+saida4:                                           ; preds = %se2, %condicao1, %saida
+  %TECLA_D = load i32* @TECLA_D
+  %8 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_D)
+  %TECLA_SETA_DIREITA = load i32* @TECLA_SETA_DIREITA
+  %9 = call i1 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTeclado.tecla_pressionada(i32 %TECLA_SETA_DIREITA)
+  %10 = or i1 %8, %9
+  br i1 %10, label %se9, label %senao10
+
+condicao8:                                        ; No predecessors!
+  br label %saida11
+
+se9:                                              ; preds = %saida4
   %velocidade_horizontal12 = load double* @velocidade_horizontal
   %ACELERACAO_FOGUETE13 = load double* @ACELERACAO_FOGUETE
   %PERCENTUAL_VELOCIDADE_HORIZONTAL14 = load double* @PERCENTUAL_VELOCIDADE_HORIZONTAL
@@ -333,18 +335,18 @@ se9:                                              ; preds = %pulo1
   store double %12, double* @velocidade_horizontal
   br label %saida11
 
-senao10:                                          ; preds = %pulo1
+senao10:                                          ; preds = %saida4
+  ret void
+
+saida11:                                          ; preds = %saida18, %se9, %condicao8
   %velocidade_horizontal19 = load double* @velocidade_horizontal
   %13 = fcmp ogt double %velocidade_horizontal19, 0.000000e+00
   br i1 %13, label %se16, label %senao17
 
-saida11:                                          ; preds = %saida18, %se9, %se2
+condicao15:                                       ; No predecessors!
   br label %saida18
 
-pulo15:                                           ; No predecessors!
-  ret void
-
-se16:                                             ; preds = %senao10
+se16:                                             ; preds = %saida11
   %velocidade_horizontal20 = load double* @velocidade_horizontal
   %ACELERACAO_GRAVIDADE21 = load double* @ACELERACAO_GRAVIDADE
   %PERCENTUAL_VELOCIDADE_HORIZONTAL22 = load double* @PERCENTUAL_VELOCIDADE_HORIZONTAL
@@ -353,10 +355,10 @@ se16:                                             ; preds = %senao10
   store double %15, double* @velocidade_horizontal
   br label %saida18
 
-senao17:                                          ; preds = %senao10
+senao17:                                          ; preds = %saida11
   br label %saida18
 
-saida18:                                          ; preds = %senao17, %se16, %saida11
+saida18:                                          ; preds = %senao17, %se16, %condicao15
   br label %saida11
 }
 
@@ -394,7 +396,7 @@ incio_funcao:
   %6 = or i1 %3, %5
   br i1 %6, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -402,6 +404,9 @@ se:                                               ; preds = %incio_funcao
   br label %saida
 
 senao:                                            ; preds = %incio_funcao
+  ret void
+
+saida:                                            ; preds = %senao4, %se, %condicao
   %y_foguete6 = load i32* @y_foguete
   %ALTURA_FOGUETE7 = load i32* @ALTURA_FOGUETE
   %7 = add i32 %y_foguete6, %ALTURA_FOGUETE7
@@ -410,10 +415,16 @@ senao:                                            ; preds = %incio_funcao
   %9 = icmp sgt i32 %8, %y_plataforma
   br i1 %9, label %se3, label %senao4
 
-saida:                                            ; preds = %saida5, %se, %pulo
+condicao2:                                        ; No predecessors!
   br label %saida5
 
-pulo2:                                            ; No predecessors!
+se3:                                              ; preds = %saida
+  br label %saida5
+
+senao4:                                           ; preds = %saida
+  br label %saida
+
+saida5:                                           ; preds = %se9, %se3, %condicao2
   %x_foguete12 = load i32* @x_foguete
   %x_plataforma = load i32* @x_plataforma
   %10 = icmp sgt i32 %x_foguete12, %x_plataforma
@@ -427,78 +438,70 @@ pulo2:                                            ; No predecessors!
   %14 = and i1 %10, %13
   br i1 %14, label %se9, label %senao10
 
-se3:                                              ; preds = %senao
+condicao8:                                        ; No predecessors!
   br label %saida11
 
-senao4:                                           ; preds = %senao
+se9:                                              ; preds = %saida5
   br label %saida5
 
-saida5:                                           ; preds = %pulo16, %senao4, %saida
-  br label %saida
-
-pulo8:                                            ; No predecessors!
+senao10:                                          ; preds = %saida5
   %velocidade_vertical = load double* @velocidade_vertical
   %VELOCIDADE_MAXIMA_POUSO = load double* @VELOCIDADE_MAXIMA_POUSO
   %15 = fcmp ule double %velocidade_vertical, %VELOCIDADE_MAXIMA_POUSO
   br i1 %15, label %se17, label %senao18
 
-se9:                                              ; preds = %pulo2
+saida11:                                          ; preds = %saida23, %senao18, %condicao8
   br label %saida19
 
-senao10:                                          ; preds = %pulo2
+condicao16:                                       ; No predecessors!
+  store i1 true, i1* @pousou
+  %16 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaUtil.tempo_decorrido()
+  %tempo_inicio_jogo = load i32* @tempo_inicio_jogo
+  %17 = sub i32 %16, %tempo_inicio_jogo
+  store i32 %17, i32* @tempo_total_jogo
+  br label %saida19
+
+se17:                                             ; preds = %senao10
+  store i1 true, i1* @quebrou
+  br label %saida19
+
+senao18:                                          ; preds = %senao10
+  br label %saida11
+
+saida19:                                          ; preds = %se17, %condicao16, %saida11
   %y_foguete24 = load i32* @y_foguete
   %ALTURA_FOGUETE25 = load i32* @ALTURA_FOGUETE
-  %16 = add i32 %y_foguete24, %ALTURA_FOGUETE25
+  %18 = add i32 %y_foguete24, %ALTURA_FOGUETE25
   %ALTURA_TELA = load i32* @ALTURA_TELA
-  %17 = sub i32 %ALTURA_TELA, 57
+  %19 = sub i32 %ALTURA_TELA, 57
   %x_foguete26 = load i32* @x_foguete
-  %18 = uitofp i32 %x_foguete26 to double
-  %19 = fsub double 4.000000e+02, %18
+  %20 = uitofp i32 %x_foguete26 to double
+  %21 = fsub double 4.000000e+02, %20
   %LARGURA_FOGUETE27 = load i32* @LARGURA_FOGUETE
-  %20 = uitofp i32 %LARGURA_FOGUETE27 to double
-  %21 = fdiv double %20, 2.000000e+00
-  %22 = fadd double %19, %21
-  %23 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaMatematica.valor_absoluto(double %22)
-  %24 = uitofp i32 %23 to double
-  %25 = fdiv double %24, 7.000000e+00
-  %26 = uitofp i32 %17 to double
-  %27 = fadd double %26, %25
-  %28 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTipos.real_para_inteiro(double %27)
-  %29 = icmp sgt i32 %16, %28
-  br i1 %29, label %se21, label %senao22
+  %22 = uitofp i32 %LARGURA_FOGUETE27 to double
+  %23 = fdiv double %22, 2.000000e+00
+  %24 = fadd double %21, %23
+  %25 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaMatematica.valor_absoluto(double %24)
+  %26 = uitofp i32 %25 to double
+  %27 = fdiv double %26, 7.000000e+00
+  %28 = uitofp i32 %19 to double
+  %29 = fadd double %28, %27
+  %30 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaTipos.real_para_inteiro(double %29)
+  %31 = icmp sgt i32 %18, %30
+  br i1 %31, label %se21, label %senao22
 
-saida11:                                          ; preds = %senao22, %saida19, %se3
+condicao20:                                       ; No predecessors!
   br label %saida23
 
-pulo16:                                           ; No predecessors!
-  br label %saida5
-
-se17:                                             ; preds = %pulo8
-  store i1 true, i1* @pousou
-  %30 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaUtil.tempo_decorrido()
-  %tempo_inicio_jogo = load i32* @tempo_inicio_jogo
-  %31 = sub i32 %30, %tempo_inicio_jogo
-  store i32 %31, i32* @tempo_total_jogo
-  br label %saida19
-
-senao18:                                          ; preds = %pulo8
-  store i1 true, i1* @quebrou
-  br label %saida19
-
-saida19:                                          ; preds = %senao18, %se17, %se9
-  br label %saida11
-
-pulo20:                                           ; No predecessors!
+se21:                                             ; preds = %saida19
   store i1 true, i1* @quebrou
   br label %saida23
 
-se21:                                             ; preds = %senao10
+senao22:                                          ; preds = %saida19
   br label %saida23
 
-senao22:                                          ; preds = %senao10
+saida23:                                          ; preds = %senao22, %se21, %condicao20
   br label %saida11
-
-saida23:                                          ; preds = %se21, %pulo20, %saida11
 }
 
 define void @desenhar_fundo() {
@@ -508,7 +511,7 @@ incio_funcao:
   %0 = icmp sgt i32 %indice_fundo, %LARGURA_TELA
   br i1 %0, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -540,14 +543,14 @@ senao:                                            ; preds = %incio_funcao
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_porcao_imagem(i32 0, i32 0, i32 %indice_fundo11, i32 0, i32 %LARGURA_TELA12, i32 %ALTURA_TELA13, i32 %imagem_fundo14)
   br label %saida
 
-saida:                                            ; preds = %senao, %se, %pulo
+saida:                                            ; preds = %senao, %se, %condicao
   %tempo_inicio = load i32* @tempo_inicio
   %ultimo_giro_fundo = load i32* @ultimo_giro_fundo
   %5 = sub i32 %tempo_inicio, %ultimo_giro_fundo
   %6 = icmp sgt i32 %5, 35
   br i1 %6, label %se16, label %senao17
 
-pulo15:                                           ; No predecessors!
+condicao15:                                       ; No predecessors!
   br label %saida18
 
 se16:                                             ; preds = %saida
@@ -564,7 +567,7 @@ se16:                                             ; preds = %saida
 senao17:                                          ; preds = %saida
   br label %saida18
 
-saida18:                                          ; preds = %senao17, %se16, %pulo15
+saida18:                                          ; preds = %senao17, %se16, %condicao15
   ret void
 }
 
@@ -575,7 +578,7 @@ incio_funcao:
   %0 = icmp sgt i32 %indice_planetas, %LARGURA_TELA
   br i1 %0, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -607,14 +610,14 @@ senao:                                            ; preds = %incio_funcao
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_porcao_imagem(i32 0, i32 0, i32 %indice_planetas11, i32 0, i32 %LARGURA_TELA12, i32 %ALTURA_TELA13, i32 %imagem_planetas14)
   br label %saida
 
-saida:                                            ; preds = %senao, %se, %pulo
+saida:                                            ; preds = %senao, %se, %condicao
   %tempo_inicio = load i32* @tempo_inicio
   %ultimo_giro_planetas = load i32* @ultimo_giro_planetas
   %5 = sub i32 %tempo_inicio, %ultimo_giro_planetas
   %6 = icmp sgt i32 %5, 100
   br i1 %6, label %se16, label %senao17
 
-pulo15:                                           ; No predecessors!
+condicao15:                                       ; No predecessors!
   br label %saida18
 
 se16:                                             ; preds = %saida
@@ -631,7 +634,7 @@ se16:                                             ; preds = %saida
 senao17:                                          ; preds = %saida
   br label %saida18
 
-saida18:                                          ; preds = %senao17, %se16, %pulo15
+saida18:                                          ; preds = %senao17, %se16, %condicao15
   ret void
 }
 
@@ -650,7 +653,7 @@ incio_funcao:
   %pousou = load i1* @pousou
   br i1 %pousou, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -662,70 +665,63 @@ se:                                               ; preds = %incio_funcao
   br label %saida
 
 senao:                                            ; preds = %incio_funcao
-  %quebrou = load i1* @quebrou
-  br i1 %quebrou, label %se2, label %senao3
-
-saida:                                            ; preds = %se6, %se, %pulo
-  br label %saida4
-
-pulo1:                                            ; No predecessors!
   %1 = call i32 @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.renderizar()
   ret void
 
-se2:                                              ; preds = %senao
+saida:                                            ; preds = %se2, %se, %condicao
+  %quebrou = load i1* @quebrou
+  br i1 %quebrou, label %se2, label %senao3
+
+condicao1:                                        ; No predecessors!
+  br label %saida4
+
+se2:                                              ; preds = %saida
+  call void @desenhar_sombra_foguete()
+  br label %saida
+
+senao3:                                           ; preds = %saida
   %tempo_inicio = load i32* @tempo_inicio
   %2 = sdiv i32 %tempo_inicio, 150
   %3 = icmp ult i32 %2, 75
   br i1 %3, label %se6, label %senao7
 
-senao3:                                           ; preds = %senao
+saida4:                                           ; preds = %senao21, %se6, %condicao1
   br label %saida8
 
-saida4:                                           ; preds = %pulo23, %se10, %saida
-  call void @desenhar_sombra_foguete()
-  %acelerando = load i1* @acelerando
-  br i1 %acelerando, label %se20, label %senao21
-
-pulo5:                                            ; No predecessors!
-  br label %saida22
-
-se6:                                              ; preds = %se2
-  br label %saida
-
-senao7:                                           ; preds = %se2
-  %atualizou = load i1* @atualizou
-  %4 = sub i1 false, %atualizou
-  br i1 %4, label %se10, label %senao11
-
-saida8:                                           ; preds = %pulo19, %pulo9, %senao3
-  br label %saida12
-
-pulo9:                                            ; No predecessors!
+condicao5:                                        ; No predecessors!
   store i1 false, i1* @atualizou
   br label %saida8
 
-se10:                                             ; preds = %senao7
+se6:                                              ; preds = %senao3
   %x_foguete13 = load i32* @x_foguete
   %y_foguete14 = load i32* @y_foguete
   %ALTURA_FOGUETE = load i32* @ALTURA_FOGUETE
-  %5 = add i32 %y_foguete14, %ALTURA_FOGUETE
-  %6 = sub i32 %5, 43
+  %4 = add i32 %y_foguete14, %ALTURA_FOGUETE
+  %5 = sub i32 %4, 43
   %imagem_foguete_quebrado = load i32* @imagem_foguete_quebrado
-  call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %x_foguete13, i32 %6, i32 %imagem_foguete_quebrado)
+  call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %x_foguete13, i32 %5, i32 %imagem_foguete_quebrado)
   %x_foguete15 = load i32* @x_foguete
-  %7 = add i32 %x_foguete15, 20
+  %6 = add i32 %x_foguete15, 20
   %y_foguete16 = load i32* @y_foguete
   %ALTURA_FOGUETE17 = load i32* @ALTURA_FOGUETE
-  %8 = add i32 %y_foguete16, %ALTURA_FOGUETE17
-  %9 = sub i32 %8, 30
+  %7 = add i32 %y_foguete16, %ALTURA_FOGUETE17
+  %8 = sub i32 %7, 30
   %indice_fogo18 = load i32* @indice_fogo
-  %10 = mul i32 %indice_fogo18, 30
+  %9 = mul i32 %indice_fogo18, 30
   %imagem_fogo = load i32* @imagem_fogo
-  call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_porcao_imagem(i32 %7, i32 %9, i32 %10, i32 0, i32 30, i32 45, i32 %imagem_fogo)
+  call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_porcao_imagem(i32 %6, i32 %8, i32 %9, i32 0, i32 30, i32 45, i32 %imagem_fogo)
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.definir_cor(i32 16777215)
   br label %saida4
 
-senao11:                                          ; preds = %senao7
+senao7:                                           ; preds = %senao3
+  %atualizou = load i1* @atualizou
+  %10 = sub i1 false, %atualizou
+  br i1 %10, label %se10, label %senao11
+
+saida8:                                           ; preds = %senao11, %condicao5, %saida4
+  br label %saida12
+
+condicao9:                                        ; No predecessors!
   %indice_fogo = load i32* @indice_fogo
   %11 = add i32 %indice_fogo, 1
   %12 = sdiv i32 %11, 6
@@ -733,32 +729,39 @@ senao11:                                          ; preds = %senao7
   store i1 true, i1* @atualizou
   br label %saida12
 
-saida12:                                          ; preds = %saida12, %senao11, %saida8
+se10:                                             ; preds = %senao7
   br label %saida12
 
-pulo19:                                           ; No predecessors!
+senao11:                                          ; preds = %senao7
   br label %saida8
 
-se20:                                             ; preds = %saida4
-  %tempo_inicio27 = load i32* @tempo_inicio
-  %13 = sdiv i32 %tempo_inicio27, 100
-  %14 = icmp ult i32 %13, 50
-  br i1 %14, label %se24, label %senao25
+saida12:                                          ; preds = %se10, %condicao9, %saida8
+  %acelerando = load i1* @acelerando
+  br i1 %acelerando, label %se20, label %senao21
 
-senao21:                                          ; preds = %saida4
-  br label %saida26
-
-saida22:                                          ; preds = %saida26, %saida22, %pulo5
+condicao19:                                       ; No predecessors!
   br label %saida22
 
-pulo23:                                           ; No predecessors!
+se20:                                             ; preds = %saida12
+  br label %saida22
+
+senao21:                                          ; preds = %saida12
   %x_foguete32 = load i32* @x_foguete
   %y_foguete33 = load i32* @y_foguete
   %imagem_foguete34 = load i32* @imagem_foguete
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %x_foguete32, i32 %y_foguete33, i32 %imagem_foguete34)
   br label %saida4
 
-se24:                                             ; preds = %se20
+saida22:                                          ; preds = %saida26, %se20, %condicao19
+  %tempo_inicio27 = load i32* @tempo_inicio
+  %13 = sdiv i32 %tempo_inicio27, 100
+  %14 = icmp ult i32 %13, 50
+  br i1 %14, label %se24, label %senao25
+
+condicao23:                                       ; No predecessors!
+  br label %saida26
+
+se24:                                             ; preds = %saida22
   %x_foguete28 = load i32* @x_foguete
   %15 = add i32 %x_foguete28, 10
   %y_foguete29 = load i32* @y_foguete
@@ -767,7 +770,7 @@ se24:                                             ; preds = %se20
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %15, i32 %16, i32 %imagem_jato)
   br label %saida26
 
-senao25:                                          ; preds = %se20
+senao25:                                          ; preds = %saida22
   %x_foguete30 = load i32* @x_foguete
   %17 = add i32 %x_foguete30, 10
   %y_foguete31 = load i32* @y_foguete
@@ -776,7 +779,7 @@ senao25:                                          ; preds = %se20
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.desenhar_imagem(i32 %17, i32 %18, i32 %imagem_jato2)
   br label %saida26
 
-saida26:                                          ; preds = %senao25, %se24, %senao21
+saida26:                                          ; preds = %senao25, %se24, %condicao23
   br label %saida22
 }
 
@@ -916,6 +919,7 @@ incio_funcao:
 define void @inicializar() {
 incio_funcao:
   call void @portugol.core.llvm.bibliotecas.portugol.core.llvm.bibliotecas.BibliotecaGraficos.iniciar_modo_grafico(i1 true)
+  ret void
 }
 
 define void @finalizar() {

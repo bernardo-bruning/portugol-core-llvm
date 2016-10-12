@@ -45,7 +45,7 @@ incio_funcao:
   %2 = icmp sgt i32 %t1, 100
   br i1 %2, label %se, label %senao
 
-pulo:                                             ; No predecessors!
+condicao:                                         ; No predecessors!
   br label %saida
 
 se:                                               ; preds = %incio_funcao
@@ -55,7 +55,7 @@ se:                                               ; preds = %incio_funcao
 senao:                                            ; preds = %incio_funcao
   br label %saida
 
-saida:                                            ; preds = %senao, %se, %pulo
+saida:                                            ; preds = %senao, %se, %condicao
   ret void
 }
 

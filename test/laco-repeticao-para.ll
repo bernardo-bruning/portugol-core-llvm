@@ -25,4 +25,5 @@ para.entrada:                                     ; preds = %para.condicao, %inc
   br label %para.condicao
 
 para.saida:                                       ; preds = %para.condicao
+  ret void
 }

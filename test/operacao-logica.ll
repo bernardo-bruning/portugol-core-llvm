@@ -8,4 +8,5 @@ define void @inicio() {
 incio_funcao:
   %teste = alloca i1
   store i1 false, i1* %teste
+  ret void
 }

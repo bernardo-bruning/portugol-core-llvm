@@ -8,4 +8,5 @@ define void @inicio() {
 incio_funcao:
   %numero = alloca i32
   store i32 0, i32* %numero
+  ret void
 }
