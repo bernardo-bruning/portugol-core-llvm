@@ -17,7 +17,7 @@ public abstract class AbstractBiblioteca implements Biblioteca {
     
     @Override
     public String getNomePacote() {
-        return this.getClass().getPackage().getName() + "." + getClass().getName() + ".";
+        return (this.getClass().getPackage().getName() + "." + getClass().getName() + ".").replace(".", "_");
     }
     
     protected void assinarFuncao(Module modulo, String nomeFuncao, TypeRef retorno, TypeRef[] args) {
