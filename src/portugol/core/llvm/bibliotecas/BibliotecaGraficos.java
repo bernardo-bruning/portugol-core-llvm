@@ -105,6 +105,9 @@ public class BibliotecaGraficos extends BibliotecaComEscopo {
                     TypeRef.int32Type(),
                     TypeRef.int32Type()
                 });
+        
+        assinarFuncao(modulo, "largura_janela", TypeRef.int32Type(), new TypeRef[0]);
+        assinarFuncao(modulo, "altura_janela", TypeRef.int32Type(), new TypeRef[0]);
     }    
 
     @Override

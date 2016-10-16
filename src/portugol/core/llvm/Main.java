@@ -5,8 +5,10 @@
  */
 package portugol.core.llvm;
 
+import br.univali.portugol.nucleo.ErroCompilacao;
 import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
 import br.univali.portugol.nucleo.asa.NoBloco;
+import br.univali.portugol.nucleo.mensagens.ErroAnalise;
 import br.univali.portugol.nucleo.mensagens.ErroSintatico;
 import java.io.File;
 import java.util.ArrayList;
@@ -30,14 +32,11 @@ public class Main {
             List<File> inputs = getInputs(args);
             List<String> outputs = getOutputs(args);
             compile(inputs, outputs);
-        } catch (ExcecaoVisitaASA e) {
-            System.out.println(e.getMessage());
-            System.out.println(e.getNo().toString());
-            if(e.getNo() instanceof NoBloco){
-                int linha = ((NoBloco)e.getNo()).getTrechoCodigoFonte().getLinha();
-                System.out.println(String.format("linha %d", linha));
+        } 
+        catch (ErroCompilacao e) {
+            for (ErroAnalise erro : e.getResultadoAnalise().getErros()) {
+                System.err.println(erro.getMensagem());
             }
-            e.printStackTrace();
         }
     }
 

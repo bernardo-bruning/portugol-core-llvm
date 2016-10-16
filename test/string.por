@@ -2,6 +2,7 @@ programa
 {
 	funcao inicio()
 	{
-		//escreva("Olá mundo!")
+                inteiro t = 14%6
+		escreva("Olá mundo! %d", t)
 	}
 }

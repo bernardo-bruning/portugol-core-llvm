@@ -176,6 +176,10 @@ public class Compilador implements VisitanteASA {
 //                        System.out.println(String.format("Declaração não identificada da função '%s' na linha %d", ncf.getNome(), ncf.getTrechoCodigoFonte().getLinha()));
 //
 //                    }
+                    if(ncf.getNome().equals("escreva")){
+                        args.add(valor);
+                        continue;
+                    }
 
                     TypeRef tipo = function.getParam(i).typeOf();
                     if(!Util.hasType(valor, tipo)) 
@@ -372,20 +376,8 @@ public class Compilador implements VisitanteASA {
     @Override
     public Object visitar(NoNao nonao) throws ExcecaoVisitaASA {
         Value expressao = (Value)nonao.getExpressao().aceitar(this);
-        
-        for (LLVMLibrary.LLVMTypeKind tipo : expressao.typeOf().getTypeKind()) {            
-            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMFloatTypeKind)
-                    return construtor.buildFNeg(expressao, "");
-                
-            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMIntegerTypeKind)
-                return construtor.buildNeg(expressao, "");
-
-            if(tipo == LLVMLibrary.LLVMTypeKind.LLVMDoubleTypeKind)
-                return construtor.buildFNeg(expressao, "");
-        }
-        
-        Value fExpressao = construtor.buildFPToUI(expressao, TypeRef.doubleType().type(), "");
-        return construtor.buildFNeg(fExpressao, "");
+        return construtor.buildNot(Util.convertTo(construtor, expressao, TypeRef.int1Type()), "");
+        //return construtor.buildFNeg(fExpressao, "");
     }
 
     @Override
@@ -540,8 +532,15 @@ public class Compilador implements VisitanteASA {
     public Object visitar(NoOperacaoModulo nom) throws ExcecaoVisitaASA {
         Value valueEsquerdo = (Value)nom.getOperandoEsquerdo().aceitar(this);
         Value valueDireito = (Value)nom.getOperandoDireito().aceitar(this);
-        return construtor.buildSDiv(Util.convertToInteger(construtor, valueEsquerdo), 
-                Util.convertToInteger(construtor, valueDireito), "");
+        
+        Value divisao = construtor.buildFDiv(Util.convertToDouble(construtor, valueEsquerdo), 
+                Util.convertToDouble(construtor, valueDireito), "");
+        
+        Value mult = construtor.buildMul(Util.convertToInteger(construtor, valueDireito), 
+                Util.convertToInteger(construtor, divisao), "");
+        
+        return construtor.buildSub(Util.convertToInteger(construtor, valueEsquerdo), 
+                Util.convertToInteger(construtor, mult), "");
     }
 
     @Override
@@ -672,17 +671,16 @@ public class Compilador implements VisitanteASA {
 
     @Override
     public Object visitar(NoSe nose) throws ExcecaoVisitaASA {
-        BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("condicao");
+        //BasicBlock blocoCondicao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("condicao");
         BasicBlock blocoSe = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("se");
         BasicBlock blocoSeNao = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("senao");
         BasicBlock blocoSaida = this.blocoEscopo.getBasicBlockParent().appendBasicBlock("saida");
         
-        construtor.positionBuilderAtEnd(blocoCondicao
-        );
         Value condicao = (Value)nose.getCondicao().aceitar(this);
         construtor.buildCondBr(condicao, blocoSe, blocoSeNao);
-        
-        construtor.buildBr(blocoSaida);
+//        construtor.positionBuilderAtEnd(blocoCondicao);
+//        
+//        construtor.buildBr(blocoSaida);
         
         //construtor.clearInsertionPosition();
         construtor.positionBuilderAtEnd(blocoSe);

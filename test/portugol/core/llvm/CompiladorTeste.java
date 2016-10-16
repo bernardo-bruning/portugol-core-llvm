@@ -3,6 +3,7 @@ package portugol.core.llvm;
 import br.univali.portugol.nucleo.ErroCompilacao;
 import br.univali.portugol.nucleo.asa.ExcecaoVisitaASA;
 import br.univali.portugol.nucleo.asa.NoBloco;
+import br.univali.portugol.nucleo.mensagens.ErroAnalise;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

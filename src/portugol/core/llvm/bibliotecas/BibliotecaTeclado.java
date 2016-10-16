@@ -24,14 +24,14 @@ public class BibliotecaTeclado extends BibliotecaComEscopo {
 
     @Override
     public void inicializarEscopo(Module module, Escopo escopo) {
-        addGlobalInt(module, escopo, "TECLA_W", 0);
-        addGlobalInt(module, escopo, "TECLA_SETA_ACIMA", 0);
-        addGlobalInt(module, escopo, "TECLA_ESC", 0);
-        addGlobalInt(module, escopo, "TECLA_A", 0);
-        addGlobalInt(module, escopo, "TECLA_SETA_ESQUERDA", 0);
-        addGlobalInt(module, escopo, "TECLA_ENTER", 0);
-        addGlobalInt(module, escopo, "TECLA_D", 0);
-        addGlobalInt(module, escopo, "TECLA_SETA_DIREITA", 0);
+        addGlobalInt(module, escopo, "TECLA_W", 119);
+        addGlobalInt(module, escopo, "TECLA_SETA_ACIMA", 1073741906);
+        addGlobalInt(module, escopo, "TECLA_ESC", 27);
+        addGlobalInt(module, escopo, "TECLA_A", 97);
+        addGlobalInt(module, escopo, "TECLA_SETA_ESQUERDA", 1073741904);
+        addGlobalInt(module, escopo, "TECLA_ENTER", 1073741912);
+        addGlobalInt(module, escopo, "TECLA_D", 100);
+        addGlobalInt(module, escopo, "TECLA_SETA_DIREITA", 1073741903);
     }
     
 }
